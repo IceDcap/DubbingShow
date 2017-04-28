@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout 
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:id="@+id/titlebar"
+            android:layout_width="match_parent"
+            android:layout_height="44.0dip"
+            android:layout_alignParentTop="true"
+            android:background="#ff282828">
+
+            <TextView
+                android:id="@+id/back"
+                android:layout_width="wrap_content"
+                android:layout_height="44.0dip"
+                android:layout_marginLeft="10.0dip"
+                android:contentDescription="back"
+                android:drawablePadding="4.0dip"
+                android:gravity="center"
+                android:text="取消"
+                android:textColor="#ffbdbdbd"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true"
+                android:gravity="center"
+                android:text="编辑台词"
+                android:textColor="#ffbdbdbd"
+                android:textSize="17sp" />
+
+            <TextView
+                android:id="@+id/complete"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentRight="true"
+                android:contentDescription="complete"
+                android:gravity="center"
+                android:paddingRight="16.0dip"
+                android:text="完成"
+                android:textColor="#ffbdbdbd"
+                android:textSize="15sp" />
+        </RelativeLayout>
+
+        <ListView
+            android:id="@+id/subtitleList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#ff1e232f"
+            android:scrollbars="none" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/zz"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#00ffffff" />
+</FrameLayout>

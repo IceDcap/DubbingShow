@@ -1,0 +1,29 @@
+{
+  "status": "success",
+  "info": {
+    "video": "dub/201704/24/test.mp4",
+    "audios": [
+      "dub/201704/24/test.mp3"
+    ],
+    "subtitle": [
+      {
+        "context": "他们说他两星期后出来",
+        "stime": "1724",
+        "etime": "2018",
+        "role": "小李"
+      },
+      {
+        "context": "接着我听说他第二次服役要五年时间",
+        "stime": "2101",
+        "etime": "3852",
+        "role": "小王"
+      },
+      {
+        "context": "唱片公司不喜欢",
+        "stime": "3936",
+        "etime": "5937",
+        "role": "小李"
+      }
+    ]
+  }
+}

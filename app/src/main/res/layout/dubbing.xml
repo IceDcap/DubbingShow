@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    android:clipChildren="false">
+
+    <RelativeLayout
+        android:id="@+id/all"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="44.0dp"
+            android:background="#8d000000" />
+
+        <RelativeLayout
+            android:id="@+id/rl"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dubbing_bottom_container_height"
+            android:layout_alignParentBottom="true"
+            android:background="#8d000000"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:src="@drawable/dubbing_btn_record" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/fast_long_first"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/dubbing_icon_shift" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44.0dp"
+            android:background="#ff282828"
+            android:orientation="horizontal">
+            <FrameLayout
+                android:layout_weight="1.0"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/back"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:paddingLeft="16dp"
+                    android:paddingRight="16dp"
+                    android:scaleType="center"
+                    android:src="@drawable/dubbing_icon_cancel" />
+            </FrameLayout>
+
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="0.66">
+
+                <LinearLayout
+                    android:id="@+id/centerContainer"
+                    android:visibility="gone"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+                        android:id="@+id/headset"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:layout_weight="1.0"
+                        android:background="@android:color/transparent"
+                        android:gravity="center"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ds_icon_voice" />
+
+                    <ImageView
+                        android:id="@+id/living"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:layout_weight="1.0"
+                        android:background="@android:color/transparent"
+                        android:gravity="center"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ds_icon_video" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/video_time"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="00:00/00:00"
+                    android:textColor="@color/white"
+                    android:textSize="14.0sp" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1.0">
+
+                <FrameLayout
+                    android:id="@+id/script_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1.0">
+
+                    <FrameLayout
+                        android:id="@+id/frame_script"
+                        android:layout_width="42.0dp"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:layout_gravity="center">
+
+                        <ImageView
+                            android:id="@+id/scirpt"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:scaleType="center"
+                            android:src="@drawable/wz_icon_word" />
+
+                        <TextView
+                            android:id="@+id/scirpt_count"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom|center|right"
+                            android:layout_marginLeft="5.0dp"
+                            android:layout_toRightOf="@+id/scirpt"
+                            android:text=""
+                            android:textColor="@color/white"
+                            android:textSize="12.0sp" />
+                    </FrameLayout>
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/complete"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center|right"
+                    android:gravity="bottom"
+                    android:layout_marginRight="10.0dp"
+                    android:text="保存"
+                    android:textSize="15sp"
+                    android:visibility="gone"
+                    android:textColor="#ffbdbdbd"/>
+            </FrameLayout>
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/video_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.example.missevan.mydubbing.view.DubbingVideoView
+                android:id="@+id/videoView"
+                android:layout_width="match_parent"
+                android:layout_height="200.0dp" />
+
+            <TextView
+                android:id="@+id/waitingNum"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_gravity="center"
+                android:background="@drawable/dubbing_waiting_bg"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:textColor="#ffffffff"
+                android:textSize="30sp"
+                android:visibility="gone"
+                tools:text="3"/>
+
+            <TextView
+                android:id="@+id/fastProgress"
+                android:layout_width="90.0dp"
+                android:layout_height="90.0dp"
+                android:layout_gravity="center"
+                android:background="@drawable/dubbing_waiting_bg"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="0%"
+                android:textColor="#ffffffff"
+                android:textSize="30.0sp"
+                android:visibility="gone" />
+
+            <RelativeLayout
+                android:id="@+id/videoDialog"
+                android:layout_width="match_parent"
+                android:layout_height="200.0dp"
+                android:background="#d8000000"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginBottom="15.0dp"
+                    android:drawableBottom="@drawable/dubbing_photo_prompt_below"
+                    android:drawablePadding="8.0dp"
+                    android:gravity="center_horizontal"
+                    android:text="点击字幕可以进行创意改编"
+                    android:textColor="@color/colorWhite"
+                    android:textSize="16.0sp" />
+            </RelativeLayout>
+        </FrameLayout>
+
+        <ProgressBar
+            android:id="@+id/progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="2.0dp"
+            android:max="100"
+            android:maxHeight="2.0dp"
+            android:minHeight="2.0dp"
+            android:progressDrawable="@drawable/dubbing_progressbar3" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:id="@+id/sub_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1.0"
+                    android:background="#ff282828">
+
+                    <com.example.missevan.mydubbing.view.DubbingWaveformNew
+                        android:id="@+id/dubbingWaveform"
+                        android:layout_width="match_parent"
+                        android:layout_height="81.0dp"
+                        android:layout_gravity="bottom"
+                        android:background="#ff262c3b"
+                        android:visibility="invisible" />
+
+                    <com.example.missevan.mydubbing.view.DubbingSubtitleView
+                        android:id="@+id/subtitleView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:id="@+id/fast_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="100.0dp"
+                    android:background="#ff262c3b"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <RelativeLayout
+                        android:id="@+id/source_rep"
+                        android:layout_width="70.0dp"
+                        android:layout_height="match_parent">
+
+                        <ImageView
+                            android:id="@+id/source_rep_img"
+                            android:layout_width="50.0dp"
+                            android:layout_height="50.0dp"
+                            android:layout_centerHorizontal="true"
+                            android:layout_marginTop="16.0dp"
+                            android:src="@drawable/dubbing_icon_sucaiku" />
+
+                        <TextView
+                            android:id="@+id/source_rep_tv"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@+id/source_rep_img"
+                            android:layout_centerHorizontal="true"
+                            android:layout_marginTop="5.0dp"
+                            android:text="素材库"
+                            android:textColor="#ffd2d2d2"
+                            android:textSize="14.0sp" />
+                    </RelativeLayout>
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.0"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:id="@+id/source_type"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="horizontal" />
+                    </HorizontalScrollView>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/bottom_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dubbing_bottom_container_height"
+                    android:background="#ff1b1b1b"
+                    android:clipChildren="false"
+                    android:orientation="horizontal">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.0"
+                        android:clipChildren="false">
+
+                        <FrameLayout
+                            android:id="@+id/withdrawcotainer"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:visibility="gone">
+
+                            <ImageView
+                                android:id="@+id/withdraw"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/dubbing_icon_withdraw_enable" />
+
+                            <TextView
+                                android:id="@+id/withdrawcount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center|right|top"
+                                android:layout_marginRight="-5.0dp"
+                                android:layout_marginTop="-5.0dp"
+                                android:background="@drawable/bg_white_circle_18"
+                                android:gravity="center"
+                                android:text="1"
+                                android:textColor="#ff262c3b" />
+                        </FrameLayout>
+
+                        <ImageView
+                            android:id="@+id/withdrawtip"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_above="@+id/withdrawcotainer"
+                            android:layout_alignParentLeft="true"
+                            android:src="@drawable/ds_dubbing_icon_return"
+                            android:visibility="gone" />
+
+                        <ImageView
+                            android:id="@+id/coopera"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:src="@drawable/wz_dubbing_icon_cooperation"
+                            android:visibility="gone" />
+                    </RelativeLayout>
+
+                    <ImageView
+                        android:id="@+id/action"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:src="@drawable/dubbing_btn_record" />
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.0">
+
+                        <ImageView
+                            android:id="@+id/review"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:src="@drawable/dubbing_btn_try_listen"
+                            android:visibility="gone" />
+                    </FrameLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <RelativeLayout
+                android:id="@+id/no_film_first"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="5.0dp"
+                android:background="#d8000000"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="15.0dp"
+                    android:drawablePadding="8.0dp"
+                    android:drawableTop="@drawable/dubbing_photo_prompt_above"
+                    android:gravity="center_horizontal"
+                    android:text="点击视频可预览原声"
+                    android:textColor="@color/colorWhite"
+                    android:textSize="16.0sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@+id/peiyin"
+                    android:layout_marginBottom="@dimen/dubbing_bottom"
+                    android:gravity="center_horizontal"
+                    android:text="点击下方按钮开始配音"
+                    android:textColor="@color/colorWhite"
+                    android:textSize="16.0sp" />
+
+                <RelativeLayout
+                    android:id="@+id/peiyin"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dubbing_bottom_container_height"
+                    android:layout_alignParentBottom="true"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_above="@+id/action1"
+                        android:layout_marginBottom="15.0dp"
+                        android:drawableBottom="@drawable/dubbing_photo_prompt_below"
+                        android:textColor="@color/colorWhite" />
+
+                    <ImageView
+                        android:id="@+id/action1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:src="@drawable/dubbing_btn_record" />
+                </RelativeLayout>
+            </RelativeLayout>
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

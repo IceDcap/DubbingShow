@@ -1,0 +1,20 @@
+package com.example.missevan.mydubbing.camera;
+
+import android.hardware.Camera;
+
+/**
+ * Created by missevan on 2017/4/26.
+ */
+
+public interface CameraOperation {
+
+    public abstract int getVideoAngle();
+
+    public abstract int startPreview(Camera.Size size);
+
+    public abstract boolean startRecord(Camera.Size size);
+
+    public abstract int stopPreview();
+
+    public abstract void stopRecord();
+}
