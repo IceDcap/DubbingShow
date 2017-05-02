@@ -13,6 +13,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import com.example.missevan.mydubbing.MainActivity;
 import com.example.missevan.mydubbing.R;
 import com.example.missevan.mydubbing.camera.CameraContainer;
 import com.example.missevan.mydubbing.camera.CameraView2;
@@ -70,6 +71,12 @@ public class DubbingVideoView extends FrameLayout implements
                     Log.e("DubbingWaveformNew", "SHOW_PROGRESS");
                     if (mIjkVideoView != null && mIsPlaying) {
                         int cur = mIjkVideoView.getCurrentPosition();
+                        Log.e("ddd", "cur = " + cur);
+                        Log.e("ddd", "recordtime = " + ((MainActivity)mActivity).getRecordTime());
+                        if (mode == MODE_REVIEW && cur >= ((MainActivity)mActivity).getRecordTime()){
+                            stopReview();
+                            break;
+                        }
                         int total = mIjkVideoView.getDuration();
                         if (onEventListener != null) {
                             onEventListener.onPlayTimeChanged(cur, total, mode);
@@ -359,6 +366,7 @@ public class DubbingVideoView extends FrameLayout implements
         //todo stop dubbing
         mIjkVideoView.pause();
         mPlay.setVisibility(VISIBLE);
+        mHandler.removeMessages(SHOW_PROGRESS);
     }
 
 
@@ -371,14 +379,15 @@ public class DubbingVideoView extends FrameLayout implements
         if (onEventListener != null) {
             onEventListener.onPlayback(pos);
         }
+        mHandler.removeMessages(SHOW_PROGRESS);
     }
 
     public void stopPreview(boolean isFastStop, int dubbingFlagTime) {
-        mHandler.removeMessages(SHOW_PROGRESS);
         if (onEventListener != null) {
             onEventListener.onVideoCompletion();
         }
         mPlay.setVisibility(VISIBLE);
+        mHandler.removeMessages(SHOW_PROGRESS);
     }
 
 

@@ -24,6 +24,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.missevan.mydubbing.audio.AudioHelper;
 import com.example.missevan.mydubbing.audio.ExtAudioRecorder;
 import com.example.missevan.mydubbing.audio.Mp3Recorder;
 import com.example.missevan.mydubbing.audio.WAVRecorder;
@@ -38,14 +39,17 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements DubbingVideoView.OnEventListener {
+public class MainActivity extends AppCompatActivity implements DubbingVideoView.OnEventListener,
+        AudioHelper.OnAudioRecordPlaybackListener {
     //    private static final String VIDEO = "/sdcard/dubbing/source/4625866548090916879/4625866548090916879.mp4";
     private static final String VIDEO = "/sdcard/dubbing/source/4803081086444687938/4803081086444687938.mp4";
     //    private static final String VIDEO = "/sdcard/test.mp4";
     private static final String AUDIO = "/sdcard/dubbing/source/4625866548090916879/4768294820698703403.mp3";
     private static final String BASE = "/sdcard/MyDubbing/audio_temp/";
-//    private static String MP3_PATH;
+    //    private static String MP3_PATH;
     private static String WAV_PATH;
+
+    private AudioHelper mAudioHelper;
 
 
     private void setScreenWidth() {
@@ -68,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     // data set
     List<SRTEntity> srtEntityList;
     private boolean isDubbing;
+    private long mRecordTime;
 
     // audio record relevant
 //    private Mp3Recorder mMp3Recorder;
@@ -98,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.dubbing);
+        mAudioHelper = new AudioHelper(this, this);
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -180,6 +186,10 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         }
     }
 
+    public long getRecordTime() {
+        return mRecordTime;
+    }
+
     /**
      * ACTION-BTN PERFORM CLICK
      */
@@ -190,7 +200,8 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         } else {
             mDubbingVideoView.stopDubbing();
             //fixme: pause record audio here!!!
-            stopRecording();
+            mAudioHelper.stopRecord();
+            mRecordTime = mAudioHelper.getHadRecordTime();
             mAction.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.dubbing_btn_record));
         }
         showTryListenBtn();
@@ -199,95 +210,6 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     private void showTryListenBtn() {
         mTryListenBtn.setVisibility(!isDubbing ? View.GONE : View.VISIBLE);
     }
-
-
-    /*******************************
-     * AUDIO RECORD
-     **********************************/
-    void startRecording() {
-//        if (TextUtils.isEmpty(WAV_PATH)) {
-//            File f = new File(BASE);
-//            if (!f.exists()) {
-//                f.mkdirs();
-//            }
-//            WAV_PATH = BASE + System.currentTimeMillis() + ".wav";
-//        }
-//        if (mWAVRecorder == null) {
-//            mWAVRecorder = new WAVRecorder(WAV_PATH);
-//        }
-//
-//        if (!mWAVRecorder.isRecording()) {
-//            mWAVRecorder.startRecord();
-//        }
-//        mUpSoundFile = new File(WAV_PATH);
-//        isRecording = mWAVRecorder.isRecording();
-
-        ExtAudioRecorder extAudioRecorder = new ExtAudioRecorder(true, MediaRecorder.AudioSource.MIC,
-                AudioFormat.SAMPLE_RATE_UNSPECIFIED, AudioFormat.CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_8BIT);
-    }
-
-    void stopRecording() {
-//        if (mWAVRecorder != null) {
-//            mWAVRecorder.stopRecord();
-//        }
-//        complete();
-//        isRecording = mWAVRecorder.isRecording();
-    }
-
-    void audition() {
-        mMediaPlayer = new MediaPlayer();
-        try {
-            mMediaPlayer.setDataSource(WAV_PATH);
-            mMediaPlayer.prepare();
-            mMediaPlayer.start();
-            MAX_DURATION = mMediaPlayer.getDuration();
-            mMediaPlayer.setLooping(true);
-        } catch (IOException e) {
-            Toast.makeText(this, "加载文件失败", Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
-        }
-    }
-
-
-    void stopAudition() {
-        if (mMediaPlayer != null) {
-            mMediaPlayer.stop();
-        }
-        if (timer != null) {
-            timer.cancel();
-        }
-    }
-
-    /**
-     * 重录
-     */
-    void retryRecording() {
-        resetAudio();
-    }
-
-
-    void resetAudio() {
-        if (mMediaPlayer != null) {
-            mMediaPlayer.release();
-        }
-
-        if (timer != null)
-            timer.cancel();
-
-        if (mUpSoundFile != null) {
-            mUpSoundFile.delete();
-            mUpSoundFile = null;
-        }
-        isRecording = false;
-    }
-
-    void complete() {
-        if (timer != null)
-            timer.cancel();
-    }
-
-    /*****************************************************************/
-
 
     /**
      * THIS SRT SUBTITLE SHOULD FETCH FROM SDCARD BY PRE-ACTIVITY DOWNLOADED
@@ -368,7 +290,8 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
                 mWaitingNum.setVisibility(View.GONE);
                 mDubbingVideoView.startDubbing();
                 //fixme start record audio here!!!
-                startRecording();
+                Log.e("ddd", "mRecordTime = " + mRecordTime);
+                mAudioHelper.startRecord(mRecordTime);
                 mAction.setImageDrawable(ContextCompat.getDrawable(MainActivity.this,
                         R.drawable.dubbing_button_horizontal_stop));
             } else {
@@ -461,7 +384,8 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         final int mode = mDubbingVideoView.getMode();
         if (mode == DubbingVideoView.MODE_DUBBING) {
             mCompleteBtn.setVisibility(View.VISIBLE);
-            stopRecording();
+            mAudioHelper.stopRecord();
+            mRecordTime = 0;
             isDubbing = false;
             showTryListenBtn();
         } else if (mode == DubbingVideoView.MODE_PREVIEW) {
@@ -487,7 +411,8 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     }
 
     private void startReview() {
-        audition();
+        //todo play background audio
+        mAudioHelper.startPlay();
         mDubbingVideoView.startReview();
         mAction.setEnabled(false);
         mProgressBar.setProgress(0);
@@ -495,7 +420,8 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     }
 
     private void stopReview() {
-        stopAudition();
+//        stopAudition();
+        mAudioHelper.stopPlay();
         mDubbingVideoView.stopReview();
         mAction.setEnabled(true);
         mProgressBar.setProgress(0);
@@ -512,4 +438,18 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mAction.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.dubbing_btn_record));
     }
 
+    @Override
+    public void onAudioDataReceived(short[] data) {
+//        Log.e("ddd", ">>>>> onAudioDataReceived >>>. " );
+    }
+
+    @Override
+    public void onProgress(int pos) {
+//        Log.e("ddd", ">>>>> pos >>>. " + pos);
+    }
+
+    @Override
+    public void onCompletion() {
+//        Log.e("ddd", ">>>>> onCompletion >>>. " );
+    }
 }

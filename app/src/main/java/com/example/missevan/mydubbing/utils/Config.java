@@ -13,6 +13,7 @@ import com.example.missevan.mydubbing.R;
 public class Config {
     public static int screen_width;
     public static int screen_height;
+    public static String TEMP_DIR;
 
 
     private Context mAppContext;
