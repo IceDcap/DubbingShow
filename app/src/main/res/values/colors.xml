@@ -7,4 +7,11 @@
     <color name="black">#ff000000</color>
     <color name="colorWhite">#ffffffff</color>
     <color name="white">#ffffffff</color>
+    <color name="waveform_selected">#ff3b6495</color>
+    <color name="waveform_unselected">#ff294f7c</color>
+    <color name="waveform_unselected_bkgnd_overlay">#ff11151f</color>
+    <color name="waveform_gray">#ff4a4d55</color>
+    <color name="review_shadow">#7061697f</color>
+    <color name="timecode">#ffaeb4bf</color>
+    <color name="timecode_shadow">#aa000000</color>
 </resources>

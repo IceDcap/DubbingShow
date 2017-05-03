@@ -8,7 +8,6 @@ import android.media.AudioTrack;
 import android.media.MediaRecorder;
 
 
-
 import android.os.Process;
 import android.util.Log;
 
@@ -35,17 +34,20 @@ public class AudioHelper {
 
     private Context mContext;
     private String mCachePath;
-//    private FileOutputStream mFileOutputStream;
+    //    private FileOutputStream mFileOutputStream;
     private RandomAccessFile mRandomAccessFile;
     private File mFile;
+    private static long sRecordedDuration;
+    private static long sWroteAccessFilePointer;
 
     private ShortBuffer mSamples; // the samples to play
     private int mNumSamples; // number of samples to play
+    private int mRecordBufferSize;
     private Thread mAudioPlayback;
 
 
     // config pram
-    private final int SAMPLE_RATE = 44100;
+    private static final int SAMPLE_RATE = 44100;
     private boolean mShouldContinue;
 
     private OnAudioRecordPlaybackListener mListener;
@@ -90,17 +92,17 @@ public class AudioHelper {
                 Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
 
                 // buffer size
-                int bufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE,
+                mRecordBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE,
                         AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
-                if (bufferSize == AudioRecord.ERROR || bufferSize == AudioRecord.ERROR_BAD_VALUE) {
-                    bufferSize = SAMPLE_RATE * 2;
+                if (mRecordBufferSize == AudioRecord.ERROR || mRecordBufferSize == AudioRecord.ERROR_BAD_VALUE) {
+                    mRecordBufferSize = SAMPLE_RATE * 2;
                 }
 
-                short[] audioBuffer = new short[bufferSize / 2];
+                short[] audioBuffer = new short[mRecordBufferSize / 2];
 
                 AudioRecord audioRecord = new AudioRecord(MediaRecorder.AudioSource.DEFAULT,
                         SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
-                        AudioFormat.ENCODING_PCM_16BIT, bufferSize);
+                        AudioFormat.ENCODING_PCM_16BIT, mRecordBufferSize);
 
                 if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
                     Log.e(LOG_TAG, "Audio Record can not initialized!");
@@ -108,6 +110,7 @@ public class AudioHelper {
                 }
 
                 audioRecord.startRecording();
+                final long startPoint = System.currentTimeMillis();
 
                 Log.v(LOG_TAG, "Start recording...");
 //                try {
@@ -121,27 +124,30 @@ public class AudioHelper {
                     e.printStackTrace();
                 }
 
+                long bytesRead = 0;
                 long shortsRead = 0;
                 while (mShouldContinue) {
                     int numberOfShort = audioRecord.read(audioBuffer, 0, audioBuffer.length);
                     shortsRead += numberOfShort;
 
-
+                    Log.e("ddd", "shortsRead = " + shortsRead);
                     // write to storage
                     byte[] b = short2byte(audioBuffer);
+                    bytesRead += b.length;
                     try {
-//                        mFileOutputStream.write(b, 0, bufferSize);
-                        mRandomAccessFile.write(b, 0, bufferSize);
+                        mRandomAccessFile.write(b, 0, mRecordBufferSize);
+                        sWroteAccessFilePointer = mRandomAccessFile.getFilePointer();
+                        Log.e("ddd", "pointer = " + sWroteAccessFilePointer);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
-                    if (null != mListener) {
-                        mListener.onAudioDataReceived(audioBuffer);
-                    }
                 }
-
+                final long endPoint = System.currentTimeMillis();
                 audioRecord.stop();
+                sRecordedDuration += endPoint - startPoint;
+                if (null != mListener) {
+                    mListener.onAudioDataReceived(sRecordedDuration, sWroteAccessFilePointer);
+                }
                 audioRecord.release();
                 Log.v(LOG_TAG, String.format("Recording stopped. Samples read: %d", shortsRead));
             }
@@ -220,7 +226,9 @@ public class AudioHelper {
         Log.v(LOG_TAG, "Audio streaming finished. Samples written: " + totalWritten);
     }
 
-    /** Get had recorded time */
+    /**
+     * Get had recorded time
+     */
     public long getHadRecordTime() {
         long time = 0;
         try {
@@ -232,30 +240,40 @@ public class AudioHelper {
     }
 
 
-    /** Record audio */
-    public void startRecord(long time) {
+    /**
+     * Record audio
+     */
+    public void startRecord(long pointer) {
         if (mShouldContinue) return;
         mShouldContinue = true;
-        recordAudio(time);
+        recordAudio(pointer);
     }
 
-    /** Audio is recording or not */
+    /**
+     * Audio is recording or not
+     */
     public boolean isRecording() {
         return mShouldContinue;
     }
 
-    /** Stop record audio */
+    /**
+     * Stop record audio
+     */
     public void stopRecord() {
         mShouldContinue = false;
     }
 
 
-    /** Audio is playing or not */
+    /**
+     * Audio is playing or not
+     */
     public boolean isPlaying() {
         return mAudioPlayback != null;
     }
 
-    /** Audio playback */
+    /**
+     * Audio playback
+     */
     public void startPlay() {
         if (mAudioPlayback != null) return;
         mShouldContinue = true;
@@ -268,7 +286,9 @@ public class AudioHelper {
         mAudioPlayback.start();
     }
 
-    /** Audio stop play */
+    /**
+     * Audio stop play
+     */
     public void stopPlay() {
         if (isPlaying()) {
             mShouldContinue = false;
@@ -319,8 +339,26 @@ public class AudioHelper {
         return output.toByteArray();
     }
 
+    public static long accessFilePointer2duration(long pointer) {
+        if (sWroteAccessFilePointer == 0) return 0;
+        if (sRecordedDuration > 0 && pointer < sWroteAccessFilePointer) {
+            return sRecordedDuration * pointer / sWroteAccessFilePointer;
+        }
+        return 0;
+    }
+
+    public static long duration2accessFilePointer(long duration) {
+        if (sRecordedDuration == 0) return 0;
+        if (sWroteAccessFilePointer > 0 && duration <= sRecordedDuration) {
+            return duration * sWroteAccessFilePointer / sRecordedDuration;
+        }
+
+        return 0;
+    }
+
     public interface OnAudioRecordPlaybackListener {
-        void onAudioDataReceived(short[] data);
+
+        void onAudioDataReceived(long duration, long bytesRead);
 
         void onProgress(int pos);
 

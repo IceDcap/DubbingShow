@@ -72,16 +72,17 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     // data set
     List<SRTEntity> srtEntityList;
     private boolean isDubbing;
-    private long mRecordTime;
+//    private long mRecordTime;
 
     // audio record relevant
-//    private Mp3Recorder mMp3Recorder;
-    private WAVRecorder mWAVRecorder;
+    private long mRecordedDuration;
+    private long mWroteAccessFilePointer;
     private boolean isRecording;
     private MediaPlayer mMediaPlayer;
-    private CountDownTimer timer;
+    private CountDownTimer mCountDownTimer; // review by count down timer
     private long MAX_DURATION = 0;
     private File mUpSoundFile;
+
 
     // view component
     private DubbingSubtitleView mDubbingSubtitleView;
@@ -151,8 +152,8 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mAction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dubbing();
                 isDubbing = !isDubbing;
+                dubbing();
             }
         });
 
@@ -172,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         });
     }
 
-    private void onTryListenClick() {
+    public void onTryListenClick() {
         final LevelListDrawable tryListenDrawable = (LevelListDrawable) mTryListenBtn.getDrawable();
         final int level = tryListenDrawable.getLevel();
         mTryListenBtn.setImageLevel((level + 1) % 2);
@@ -186,29 +187,29 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         }
     }
 
-    public long getRecordTime() {
-        return mRecordTime;
-    }
+//    public long getRecordTime() {
+//        return mRecordTime;
+//    }
 
     /**
      * ACTION-BTN PERFORM CLICK
      */
     private void dubbing() {
-        if (!isDubbing) {
+        if (isDubbing) {
             mCompleteBtn.setVisibility(View.GONE);
             toggleWaitingIndicator();
         } else {
             mDubbingVideoView.stopDubbing();
             //fixme: pause record audio here!!!
             mAudioHelper.stopRecord();
-            mRecordTime = mAudioHelper.getHadRecordTime();
+//            mRecordTime = mAudioHelper.getHadRecordTime();
             mAction.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.dubbing_btn_record));
         }
         showTryListenBtn();
     }
 
     private void showTryListenBtn() {
-        mTryListenBtn.setVisibility(!isDubbing ? View.GONE : View.VISIBLE);
+        mTryListenBtn.setVisibility(isDubbing ? View.GONE : View.VISIBLE);
     }
 
     /**
@@ -290,8 +291,10 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
                 mWaitingNum.setVisibility(View.GONE);
                 mDubbingVideoView.startDubbing();
                 //fixme start record audio here!!!
-                Log.e("ddd", "mRecordTime = " + mRecordTime);
-                mAudioHelper.startRecord(mRecordTime);
+                //todo: the variable 'mRecordedDuration' should change by wave bar
+                long pointer = mAudioHelper.duration2accessFilePointer(mRecordedDuration);
+                Log.e("ccc", "pointer = " + pointer + "\tmPointer = " + mWroteAccessFilePointer);
+                mAudioHelper.startRecord(mWroteAccessFilePointer);
                 mAction.setImageDrawable(ContextCompat.getDrawable(MainActivity.this,
                         R.drawable.dubbing_button_horizontal_stop));
             } else {
@@ -384,10 +387,9 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         final int mode = mDubbingVideoView.getMode();
         if (mode == DubbingVideoView.MODE_DUBBING) {
             mCompleteBtn.setVisibility(View.VISIBLE);
-            mAudioHelper.stopRecord();
-            mRecordTime = 0;
             isDubbing = false;
-            showTryListenBtn();
+            dubbing();
+//            mRecordTime = 0;
         } else if (mode == DubbingVideoView.MODE_PREVIEW) {
 
         } else {
@@ -417,16 +419,31 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mAction.setEnabled(false);
         mProgressBar.setProgress(0);
         mProgressBar.setSecondaryProgress(0);
+        mCountDownTimer = new CountDownTimer(mRecordedDuration, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+
+            }
+
+            @Override
+            public void onFinish() {
+                onTryListenClick();
+            }
+        };
+        mCountDownTimer.start();
     }
 
     private void stopReview() {
-//        stopAudition();
         mAudioHelper.stopPlay();
         mDubbingVideoView.stopReview();
         mAction.setEnabled(true);
-        mProgressBar.setProgress(0);
+        final int resetTimeByAccessFilePointer = (int) mRecordedDuration;
+        final int resetTimeByIjkVideoView = (int) mDubbingVideoView.getDubbingLength();
+        final int resetTime = resetTimeByIjkVideoView == 0 ? resetTimeByAccessFilePointer : resetTimeByIjkVideoView;
         mProgressBar.setSecondaryProgress(0);
-        mDubbingSubtitleView.refresh(0);
+
+        refreshTime(resetTime, mDuration, (mDuration - resetTime) > 1000 ?
+                DubbingVideoView.MODE_DUBBING : DubbingVideoView.MODE_REVIEW);
     }
 
     @Override
@@ -439,13 +456,15 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     }
 
     @Override
-    public void onAudioDataReceived(short[] data) {
-//        Log.e("ddd", ">>>>> onAudioDataReceived >>>. " );
+    public void onAudioDataReceived(long duration, long bytesRead) {
+        mRecordedDuration = duration;
+        mWroteAccessFilePointer = bytesRead;
+        Log.e("ddd", "mRecordedDuration = " + mRecordedDuration + "\tmWroteAccessFilePointer = " + mWroteAccessFilePointer);
     }
 
     @Override
     public void onProgress(int pos) {
-//        Log.e("ddd", ">>>>> pos >>>. " + pos);
+        Log.e("ddd", "record pos >> " + pos);
     }
 
     @Override

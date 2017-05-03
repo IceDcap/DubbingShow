@@ -10,21 +10,21 @@ import android.util.TypedValue;
  */
 
 public class DimenUtil {
-    public static int dip2px(Context paramContext, float paramFloat) {
-        return (int) TypedValue.applyDimension(1, paramFloat, paramContext.getResources().getDisplayMetrics());
+    public static int dip2px(Context c, float paramFloat) {
+        return (int) TypedValue.applyDimension(1, paramFloat, c.getResources().getDisplayMetrics());
     }
 
-    public static int getScreenWidth(Context paramContext) {
+    public static int getScreenWidth(Context c) {
         DisplayMetrics localDisplayMetrics = new DisplayMetrics();
-        ((Activity) paramContext).getWindow().getWindowManager().getDefaultDisplay().getMetrics(localDisplayMetrics);
+        ((Activity) c).getWindow().getWindowManager().getDefaultDisplay().getMetrics(localDisplayMetrics);
         return localDisplayMetrics.widthPixels;
     }
 
-    public static float px2dip(Context paramContext, float paramFloat) {
-        return TypedValue.applyDimension(0, paramFloat, paramContext.getResources().getDisplayMetrics());
+    public static float px2dip(Context c, float paramFloat) {
+        return TypedValue.applyDimension(0, paramFloat, c.getResources().getDisplayMetrics());
     }
 
-    public static int sp2px(Context paramContext, float paramFloat) {
-        return (int) TypedValue.applyDimension(2, paramFloat, paramContext.getResources().getDisplayMetrics());
+    public static int sp2px(Context c, float paramFloat) {
+        return (int) TypedValue.applyDimension(2, paramFloat, c.getResources().getDisplayMetrics());
     }
 }

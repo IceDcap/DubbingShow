@@ -15,6 +15,7 @@ import android.widget.LinearLayout;
 
 import com.example.missevan.mydubbing.MainActivity;
 import com.example.missevan.mydubbing.R;
+import com.example.missevan.mydubbing.audio.AudioHelper;
 import com.example.missevan.mydubbing.camera.CameraContainer;
 import com.example.missevan.mydubbing.camera.CameraView2;
 import com.example.missevan.mydubbing.utils.AudioMedia;
@@ -71,12 +72,12 @@ public class DubbingVideoView extends FrameLayout implements
                     Log.e("DubbingWaveformNew", "SHOW_PROGRESS");
                     if (mIjkVideoView != null && mIsPlaying) {
                         int cur = mIjkVideoView.getCurrentPosition();
-                        Log.e("ddd", "cur = " + cur);
-                        Log.e("ddd", "recordtime = " + ((MainActivity)mActivity).getRecordTime());
-                        if (mode == MODE_REVIEW && cur >= ((MainActivity)mActivity).getRecordTime()){
-                            stopReview();
-                            break;
-                        }
+//                        if (mode == MODE_REVIEW &&
+//                                cur >= AudioHelper.accessFilePointer2duration(
+//                                        ((MainActivity) mActivity).getRecordTime())) {
+//                            ((MainActivity) mActivity).onTryListenClick();
+//                            break;
+//                        }
                         int total = mIjkVideoView.getDuration();
                         if (onEventListener != null) {
                             onEventListener.onPlayTimeChanged(cur, total, mode);
@@ -370,8 +371,6 @@ public class DubbingVideoView extends FrameLayout implements
     }
 
 
-
-
     public void stopPlayback(int pos) {
         mIjkVideoView.pause();
         mIjkVideoView.seekTo(pos);
@@ -404,6 +403,14 @@ public class DubbingVideoView extends FrameLayout implements
         mIsPlaying = false;
         mHandler.removeMessages(SHOW_PROGRESS);
         mPlay.setVisibility(VISIBLE);
+    }
+
+    public long getDubbingLength() {
+        return mDubbingLength;
+    }
+
+    public void setDubbingLength(long dubbingLength) {
+        mDubbingLength = dubbingLength;
     }
 
     @Override
