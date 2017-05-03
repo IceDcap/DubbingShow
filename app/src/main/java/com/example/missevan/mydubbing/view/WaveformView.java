@@ -156,29 +156,29 @@ public class WaveformView extends View {
         setFocusable(false);
         mGridPaint = new Paint();
         mGridPaint.setAntiAlias(true);
-        mGridPaint.setStrokeWidth(1);
+        mGridPaint.setStrokeWidth(LINE_STROKE);
 
         mWavePaint = new Paint();
         mWavePaint.setColor(ContextCompat.getColor(context, R.color.white));
 
         mSelectedLinePaint = new Paint();
         mSelectedLinePaint.setAntiAlias(true);
-        mSelectedLinePaint.setStrokeWidth(1);
+        mSelectedLinePaint.setStrokeWidth(LINE_STROKE);
         mSelectedLinePaint.setColor(ContextCompat.getColor(context, R.color.waveform_selected));
 
         mUnselectedLinePaint = new Paint();
         mUnselectedLinePaint.setAntiAlias(true);
-        mUnselectedLinePaint.setStrokeWidth(1);
+        mUnselectedLinePaint.setStrokeWidth(LINE_STROKE);
         mUnselectedLinePaint.setColor(ContextCompat.getColor(context, R.color.waveform_unselected));
 
         mUnselectedBkgndLinePaint = new Paint();
         mUnselectedBkgndLinePaint.setAntiAlias(true);
-        mUnselectedBkgndLinePaint.setStrokeWidth(1);
+        mUnselectedBkgndLinePaint.setStrokeWidth(LINE_STROKE);
         mUnselectedBkgndLinePaint.setColor(ContextCompat.getColor(context, R.color.waveform_unselected_bkgnd_overlay));
 
         mGrayLinePaint = new Paint();
         mGrayLinePaint.setAntiAlias(true);
-        mGrayLinePaint.setStrokeWidth(1);
+        mGrayLinePaint.setStrokeWidth(LINE_STROKE);
         mGrayLinePaint.setColor(ContextCompat.getColor(context, R.color.waveform_gray));
 
         mReviewShadowPaint = new Paint();
@@ -212,7 +212,7 @@ public class WaveformView extends View {
 
     private float calCurTimeByIndicatorX(int indicatorX) {
         int curX = progressIndicator.getWidth() / 2 + mOffset + indicatorX;
-        float curTime = (float) (curX * pixelsToSeconds(1));
+        float curTime = (float) (curX * pixelsToSeconds(LINE_STROKE));
         if (curTime < 0) {
             curTime = 0;
         } else if (curTime < mDuration) {
@@ -321,7 +321,7 @@ public class WaveformView extends View {
         canvas.drawLine(0, mPaddingTop, measuredWidth, mPaddingTop, mGridPaint);
         canvas.drawLine(0, measuredHeight - mPaddingBottom, measuredWidth,
                 measuredHeight - mPaddingBottom, mGridPaint);
-        final double onePixelInSecs = pixelsToSeconds(1);
+        final double onePixelInSecs = pixelsToSeconds(LINE_STROKE);
         boolean onlyEveryFiveSecs = true;
         if (onePixelInSecs <= 0.02) {
             onlyEveryFiveSecs = false;
@@ -373,7 +373,7 @@ public class WaveformView extends View {
             @Override
             public void run() {
                 if (null != mListener) {
-                    mListener.waveformFling(1);
+                    mListener.waveformFling(LINE_STROKE);
                 }
             }
         }, 100);
