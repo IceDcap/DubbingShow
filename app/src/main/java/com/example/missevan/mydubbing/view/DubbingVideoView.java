@@ -71,6 +71,7 @@ public class DubbingVideoView extends FrameLayout implements
                 case SHOW_PROGRESS:
                     if (mIjkVideoView != null && mIsPlaying) {
                         int cur = mIjkVideoView.getCurrentPosition();
+                        lasttime = cur;
 //                        if (mode == MODE_REVIEW &&
 //                                cur >= AudioHelper.accessFilePointer2duration(
 //                                        ((MainActivity) mActivity).getRecordTime())) {
@@ -276,6 +277,20 @@ public class DubbingVideoView extends FrameLayout implements
         mHandler.sendEmptyMessage(SHOW_PROGRESS);
     }
 
+    public void onResume() {
+        if (mIjkVideoView.getCurrentPosition() >0 ) return;
+        // should show preview thumbnail on DubbingVideoView
+        mThumb.setImageBitmap(MediaUtil.getThumbnail(mContext, 0/*maybe change*/, mVideoPath));
+        mThumb.setVisibility(VISIBLE);
+    }
+
+    public void onPause() {
+        if (isPlaying()) {
+            pause(mode);
+        }
+    }
+
+
 
     public void reset(boolean keepStatus) {
         mIjkVideoView.pause();
@@ -348,6 +363,10 @@ public class DubbingVideoView extends FrameLayout implements
 
     }
 
+    public boolean isPlaying() {
+        return mIjkVideoView.isPlaying();
+    }
+
     /**
      * start dubbing
      */
@@ -416,6 +435,7 @@ public class DubbingVideoView extends FrameLayout implements
     public void onCompletion(IMediaPlayer iMediaPlayer) {
         stopPreview(false, 0);
         resetAV();
+        lasttime = 0;
     }
 
     @Override

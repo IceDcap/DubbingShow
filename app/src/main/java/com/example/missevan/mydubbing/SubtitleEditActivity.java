@@ -1,5 +1,6 @@
 package com.example.missevan.mydubbing;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -23,6 +24,7 @@ import java.util.List;
 public class SubtitleEditActivity extends AppCompatActivity implements View.OnClickListener{
     private static final String LOG_TAG = SubtitleEditActivity.class.getSimpleName();
     private static final String EXTRA_SUBTITLE_LIST_KEY = "extra-subtitle-list-key";
+    public static final String EXTRA_RESULT_SUBTITLE_LIST_KEY = "extra-result-subtitle-list-key";
     // view component
     private RecyclerView mRecyclerView;
     private View mCancel;
@@ -32,10 +34,11 @@ public class SubtitleEditActivity extends AppCompatActivity implements View.OnCl
 
     private ArrayList<SRTEntity> mEntities;
 
-    public static void launch(Context who, ArrayList<SRTEntity> subtitleEntityList) {
+    public static void launch(Activity who, ArrayList<SRTEntity> subtitleEntityList, int resquestCode) {
         Intent intent = new Intent(who, SubtitleEditActivity.class);
         intent.putParcelableArrayListExtra(EXTRA_SUBTITLE_LIST_KEY, subtitleEntityList);
-        who.startActivity(intent);
+//        who.startActivity(intent);
+        who.startActivityForResult(intent, resquestCode);
     }
 
     @Override
@@ -66,7 +69,10 @@ public class SubtitleEditActivity extends AppCompatActivity implements View.OnCl
                 onBackPressed();
                 break;
             case R.id.complete:
-
+                Intent i = new Intent();
+                i.putExtra(EXTRA_RESULT_SUBTITLE_LIST_KEY, mAdapter.getList());
+                setResult(Activity.RESULT_OK, i);
+                onBackPressed();
                 break;
         }
     }

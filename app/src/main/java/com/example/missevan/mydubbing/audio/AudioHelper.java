@@ -26,7 +26,6 @@ import java.nio.ShortBuffer;
 /**
  * Created by missevan on 2017/5/2.
  */
-
 public class AudioHelper {
     private static final String LOG_TAG = AudioHelper.class.getSimpleName();
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
@@ -46,7 +45,7 @@ public class AudioHelper {
     private Thread mAudioPlayback;
 
 
-    // config pram
+    // config param
     private static final int SAMPLE_RATE = 44100;
     private boolean mShouldContinue;
 
@@ -130,14 +129,12 @@ public class AudioHelper {
                     int numberOfShort = audioRecord.read(audioBuffer, 0, audioBuffer.length);
                     shortsRead += numberOfShort;
 
-                    Log.e("ddd", "shortsRead = " + shortsRead);
                     // write to storage
                     byte[] b = short2byte(audioBuffer);
                     bytesRead += b.length;
                     try {
                         mRandomAccessFile.write(b, 0, mRecordBufferSize);
                         sWroteAccessFilePointer = mRandomAccessFile.getFilePointer();
-                        Log.e("ddd", "pointer = " + sWroteAccessFilePointer);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -155,6 +152,8 @@ public class AudioHelper {
     }
 
 
+    // FIXME: 04/05/2017 HERE HAS BUGS >> WHEN A RECORD APPEND THE LAST RECORD AND PLAY THE TWO PARTS
+    // FIXME: 04/05/2017 THE FIRST TIME PLAY IS MISS THE SECOND PART AUDIO, WHEN THE SECOND PLAY IS WORKED
     private void playAudio() {
         int bufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE,
                 AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);

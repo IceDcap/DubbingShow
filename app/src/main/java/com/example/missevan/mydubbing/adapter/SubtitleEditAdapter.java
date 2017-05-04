@@ -26,11 +26,13 @@ import java.util.Map;
 public class SubtitleEditAdapter extends RecyclerView.Adapter<SubtitleEditAdapter.SubtitleEditVH> {
     private Context mContext;
     private ArrayList<SRTEntity> mList;
-    private Map<Integer, SubtitleEditVH> mVHMap;
 
     public SubtitleEditAdapter(ArrayList<SRTEntity> list) {
         mList = list;
-        mVHMap = new HashMap<>();
+    }
+
+    public ArrayList<SRTEntity> getList() {
+        return mList;
     }
 
     @Override
@@ -45,6 +47,10 @@ public class SubtitleEditAdapter extends RecyclerView.Adapter<SubtitleEditAdapte
         final SRTEntity entity = mList.get(position);
         if (entity == null) return;
 
+        // fix edittext content error when scroll recyclerview
+        if (holder.mEditText.getTag() instanceof TextWatcher ) {
+            holder.mEditText.removeTextChangedListener((TextWatcher) holder.mEditText.getTag());
+        }
         holder.mEditText.setText(entity.getContent());
         TextWatcher textWatcher =new TextWatcher() {
             @Override

@@ -1,6 +1,8 @@
 package com.example.missevan.mydubbing;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.LevelListDrawable;
 import android.media.AudioFormat;
@@ -102,8 +104,8 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         super.onCreate(savedInstanceState);
         setScreenWidth();
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
-//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-//                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.dubbing);
@@ -127,6 +129,18 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        mDubbingVideoView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mDubbingVideoView.onPause();
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
             case 1: {
@@ -140,6 +154,15 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
                     // permission denied, boo! Disable the functionality that depends on this permission.
                 }
             }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode != Activity.RESULT_OK) return;
+        if (requestCode == 0) {
+            srtEntityList = data.getParcelableArrayListExtra(SubtitleEditActivity.EXTRA_RESULT_SUBTITLE_LIST_KEY);
+            mDubbingSubtitleView.init(srtEntityList);
         }
     }
 
@@ -177,6 +200,9 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         });
     }
 
+    /**
+     * REVIEW BTN PERFORM CLICK
+     */
     public void onTryListenClick() {
         final LevelListDrawable tryListenDrawable = (LevelListDrawable) mTryListenBtn.getDrawable();
         final int level = tryListenDrawable.getLevel();
@@ -207,9 +233,10 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
             //fixme: pause record audio here!!!
             mAudioHelper.stopRecord();
 //            mRecordTime = mAudioHelper.getHadRecordTime();
-            // show wave bar
-            mWaveformView.setVisibility(View.VISIBLE);
+            //fixme:  show wave bar
+//            mWaveformView.setVisibility(View.VISIBLE);
             mAction.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.dubbing_btn_record));
+            isRecording = false;
         }
         showTryListenBtn();
     }
@@ -229,7 +256,11 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mDubbingSubtitleView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SubtitleEditActivity.launch(MainActivity.this, (ArrayList)srtEntityList);
+                if (isRecording || isReviewing) return;
+                if (mDubbingVideoView.isPlaying()) {
+                    mDubbingVideoView.pause(DubbingVideoView.MODE_PREVIEW);
+                }
+                SubtitleEditActivity.launch(MainActivity.this, (ArrayList)srtEntityList, 0);
             }
         });
         for (SRTEntity entity : srtEntityList) {
@@ -309,6 +340,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
                 mAudioHelper.startRecord(mWroteAccessFilePointer);
                 mAction.setImageDrawable(ContextCompat.getDrawable(MainActivity.this,
                         R.drawable.dubbing_button_horizontal_stop));
+                isRecording = true;
             } else {
                 mWaitingNum.setVisibility(View.VISIBLE);
                 mDubbingVideoView.setDisabled(true);
@@ -354,14 +386,14 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     @Override
     public boolean onPlayTimeChanged(long playTime, long totalTime, int videoMode) {
         mDuration = totalTime;
-        if (this.isReviewing) {
-            if (playTime >= this.reviewFlagTime) {
-                stopReview();
-                return false;
-            }
-//            this.dubbingWaveform.seekToWithoutRecorder(playTime);
-            // TODO: 2017/4/27 WAVE RECORDER SHOULD UPDATE
-        }
+//        if (this.isReviewing) {
+//            if (playTime >= this.reviewFlagTime) {
+//                stopReview();
+//                return false;
+//            }
+////            this.dubbingWaveform.seekToWithoutRecorder(playTime);
+//            // TODO: 2017/4/27 WAVE RECORDER SHOULD UPDATE
+//        }
         refreshTime(playTime, totalTime, videoMode);
         return true;
     }
@@ -447,6 +479,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
             }
         };
         mCountDownTimer.start();
+        isReviewing = true;
     }
 
     private void stopReview() {
@@ -460,6 +493,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
 
         refreshTime(resetTime, mDuration, (mDuration - resetTime) > 1000 ?
                 DubbingVideoView.MODE_DUBBING : DubbingVideoView.MODE_REVIEW);
+        isReviewing = false;
     }
 
     @Override
@@ -485,6 +519,5 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
 
     @Override
     public void onCompletion() {
-//        Log.e("ddd", ">>>>> onCompletion >>>. " );
     }
 }
