@@ -254,18 +254,19 @@
                     android:layout_weight="1.0"
                     android:background="#ff282828">
 
-                    <com.example.missevan.mydubbing.view.DubbingWaveformNew
-                        android:id="@+id/dubbingWaveform"
-                        android:layout_width="match_parent"
-                        android:layout_height="81.0dp"
-                        android:layout_gravity="bottom"
-                        android:background="#ff262c3b"
-                        android:visibility="invisible" />
 
                     <com.example.missevan.mydubbing.view.DubbingSubtitleView
                         android:id="@+id/subtitleView"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
+
+                    <com.example.missevan.mydubbing.view.DubbingWaveformView
+                        android:id="@+id/dubbingWaveform"
+                        android:layout_width="match_parent"
+                        android:layout_height="75dp"
+                        android:layout_gravity="bottom"
+                        android:background="#ff1b1b1b"
+                        android:visibility="invisible" />
                 </FrameLayout>
 
                 <LinearLayout

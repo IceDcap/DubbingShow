@@ -69,7 +69,6 @@ public class DubbingVideoView extends FrameLayout implements
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case SHOW_PROGRESS:
-                    Log.e("DubbingWaveformNew", "SHOW_PROGRESS");
                     if (mIjkVideoView != null && mIsPlaying) {
                         int cur = mIjkVideoView.getCurrentPosition();
 //                        if (mode == MODE_REVIEW &&

@@ -14,4 +14,6 @@
     <color name="review_shadow">#7061697f</color>
     <color name="timecode">#ffaeb4bf</color>
     <color name="timecode_shadow">#aa000000</color>
+    <color name="wave_line">#ff4b4b4b</color>
+    <color name="subtitle_edit_text_cursor">#ff902a2e</color>
 </resources>

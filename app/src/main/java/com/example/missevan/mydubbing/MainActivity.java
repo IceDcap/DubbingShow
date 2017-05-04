@@ -33,9 +33,11 @@ import com.example.missevan.mydubbing.utils.Config;
 import com.example.missevan.mydubbing.utils.SRTUtil;
 import com.example.missevan.mydubbing.view.DubbingVideoView;
 import com.example.missevan.mydubbing.view.DubbingSubtitleView;
+import com.example.missevan.mydubbing.view.WaveformView;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -93,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     private TextView mWaitingNum;
     private ImageView mTryListenBtn;
     private TextView mCompleteBtn;
+    private WaveformView mWaveformView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -146,6 +149,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mWaitingNum = (TextView) findViewById(R.id.waitingNum);
         mCompleteBtn = (TextView) findViewById(R.id.complete);
         mProgressBar = (ProgressBar) findViewById(R.id.progress);
+        mWaveformView = (WaveformView) findViewById(R.id.dubbingWaveform);
         mDubbingVideoView = (DubbingVideoView) findViewById(R.id.videoView);
         mDubbingVideoView.setPara(VIDEO, "", false, 0, "", this, this);
         mAction = (ImageView) findViewById(R.id.action);
@@ -203,6 +207,8 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
             //fixme: pause record audio here!!!
             mAudioHelper.stopRecord();
 //            mRecordTime = mAudioHelper.getHadRecordTime();
+            // show wave bar
+            mWaveformView.setVisibility(View.VISIBLE);
             mAction.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.dubbing_btn_record));
         }
         showTryListenBtn();
@@ -220,6 +226,12 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         secondRole = "";
         srtEntityList = SRTUtil.processSrtFromFile(this, R.raw.subtitle2);
         if (srtEntityList == null || srtEntityList.size() == 0) return;
+        mDubbingSubtitleView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SubtitleEditActivity.launch(MainActivity.this, (ArrayList)srtEntityList);
+            }
+        });
         for (SRTEntity entity : srtEntityList) {
             if (TextUtils.isEmpty(primaryRole)) {
                 primaryRole = entity.getRole();
@@ -289,11 +301,11 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
             if (mWaitingNumber < 1) {
                 mWaitingNumber = 3;
                 mWaitingNum.setVisibility(View.GONE);
+                mWaveformView.setVisibility(View.INVISIBLE);
                 mDubbingVideoView.startDubbing();
                 //fixme start record audio here!!!
                 //todo: the variable 'mRecordedDuration' should change by wave bar
                 long pointer = mAudioHelper.duration2accessFilePointer(mRecordedDuration);
-                Log.e("ccc", "pointer = " + pointer + "\tmPointer = " + mWroteAccessFilePointer);
                 mAudioHelper.startRecord(mWroteAccessFilePointer);
                 mAction.setImageDrawable(ContextCompat.getDrawable(MainActivity.this,
                         R.drawable.dubbing_button_horizontal_stop));
@@ -306,6 +318,10 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
             }
         }
     };
+
+    public void onWaveformProgressChanged(long time) {
+
+    }
 
     @Override
     public void onVideoPrepared(long duration) {

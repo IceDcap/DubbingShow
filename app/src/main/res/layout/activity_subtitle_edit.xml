@@ -49,11 +49,11 @@
                 android:textSize="15sp" />
         </RelativeLayout>
 
-        <ListView
+        <android.support.v7.widget.RecyclerView
             android:id="@+id/subtitleList"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#ff1e232f"
+            android:background="#ff1b1b1b"
             android:scrollbars="none" />
     </LinearLayout>
 
