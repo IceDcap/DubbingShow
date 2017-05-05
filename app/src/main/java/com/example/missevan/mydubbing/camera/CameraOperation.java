@@ -3,7 +3,7 @@ package com.example.missevan.mydubbing.camera;
 import android.hardware.Camera;
 
 /**
- * Created by missevan on 2017/4/26.
+ * Created by dsq on 2017/4/26.
  */
 
 public interface CameraOperation {

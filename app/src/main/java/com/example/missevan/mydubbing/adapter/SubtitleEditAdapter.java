@@ -4,7 +4,6 @@ import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,15 +11,11 @@ import android.widget.EditText;
 
 import com.example.missevan.mydubbing.R;
 import com.example.missevan.mydubbing.entity.SRTEntity;
-import com.example.missevan.mydubbing.entity.SRTSubtitleEntity;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
- * Created by missevan on 2017/5/4.
+ * Created by dsq on 2017/5/4.
  */
 
 public class SubtitleEditAdapter extends RecyclerView.Adapter<SubtitleEditAdapter.SubtitleEditVH> {
@@ -47,7 +42,7 @@ public class SubtitleEditAdapter extends RecyclerView.Adapter<SubtitleEditAdapte
         final SRTEntity entity = mList.get(position);
         if (entity == null) return;
 
-        // fix edittext content error when scroll recyclerview
+        // fixed edittext content error when scroll recyclerview
         if (holder.mEditText.getTag() instanceof TextWatcher ) {
             holder.mEditText.removeTextChangedListener((TextWatcher) holder.mEditText.getTag());
         }

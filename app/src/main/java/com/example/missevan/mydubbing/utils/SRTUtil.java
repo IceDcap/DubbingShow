@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Created by missevan on 2017/4/24.
+ * Created by dsq on 2017/4/24.
  */
 
 public class SRTUtil {

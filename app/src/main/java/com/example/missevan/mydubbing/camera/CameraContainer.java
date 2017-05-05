@@ -14,7 +14,7 @@ import com.example.missevan.mydubbing.R;
 import java.text.SimpleDateFormat;
 
 /**
- * Created by missevan on 2017/4/26.
+ * Created by dsq on 2017/4/26.
  */
 
 public class CameraContainer extends RelativeLayout implements CameraOperation {

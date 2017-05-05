@@ -4,7 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Created by missevan on 2017/4/24.
+ * Created by dsq on 2017/4/24.
  */
 
 public class SRTEntity implements Parcelable {

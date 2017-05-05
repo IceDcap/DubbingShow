@@ -24,7 +24,7 @@ import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 
 /**
- * Created by missevan on 2017/5/2.
+ * Created by dsq on 2017/5/2.
  */
 public class AudioHelper {
     private static final String LOG_TAG = AudioHelper.class.getSimpleName();

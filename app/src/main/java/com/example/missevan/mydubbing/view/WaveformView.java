@@ -22,7 +22,7 @@ import com.example.missevan.mydubbing.utils.DimenUtil;
 import java.util.Locale;
 
 /**
- * Created by missevan on 2017/5/3.
+ * Created by dsq on 2017/5/3.
  */
 
 public class WaveformView extends View {

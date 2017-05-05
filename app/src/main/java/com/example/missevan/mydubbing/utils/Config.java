@@ -7,7 +7,7 @@ import android.preference.PreferenceManager;
 import com.example.missevan.mydubbing.R;
 
 /**
- * Created by missevan on 2017/4/24.
+ * Created by dsq on 2017/4/24.
  */
 
 public class Config {

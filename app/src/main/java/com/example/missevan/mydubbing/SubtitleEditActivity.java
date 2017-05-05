@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by missevan on 2017/4/28.
+ * Created by dsq on 2017/4/28.
  */
 
 public class SubtitleEditActivity extends AppCompatActivity implements View.OnClickListener{

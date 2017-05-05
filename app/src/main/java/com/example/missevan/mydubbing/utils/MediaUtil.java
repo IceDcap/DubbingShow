@@ -9,7 +9,7 @@ import android.util.Log;
 import com.example.missevan.mydubbing.R;
 
 /**
- * Created by missevan on 2017/4/26.
+ * Created by dsq on 2017/4/26.
  */
 
 public class MediaUtil {

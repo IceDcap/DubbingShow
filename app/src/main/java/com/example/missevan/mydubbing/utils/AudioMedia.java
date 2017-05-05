@@ -8,7 +8,7 @@ import android.media.MediaPlayer;
 import java.io.IOException;
 
 /**
- * Created by missevan on 2017/4/24.
+ * Created by dsq on 2017/4/24.
  */
 
 public class AudioMedia implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener {

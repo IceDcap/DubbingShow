@@ -30,7 +30,7 @@ import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
 import tv.danmaku.ijk.media.player.misc.ITrackInfo;
 
 /**
- * Created by missevan on 2017/4/24.
+ * Created by dsq on 2017/4/24.
  */
 
 public class DubbingVideoView extends FrameLayout implements
@@ -204,7 +204,9 @@ public class DubbingVideoView extends FrameLayout implements
         switch (type) {
             case MODE_DUBBING:
                 mIjkVideoView.pause();
-                audioMedia.pause();
+                if (null != audioMedia) {
+                    audioMedia.pause();
+                }
                 break;
             case MODE_PREVIEW:
                 if (mDubbingLength == 0) {

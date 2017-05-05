@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 /**
- * Created by missevan on 2017/5/2.
+ * Created by dsq on 2017/5/2.
  */
 
 public class MyAudioRecorder {

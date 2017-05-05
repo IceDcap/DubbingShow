@@ -12,7 +12,7 @@ import com.example.missevan.mydubbing.utils.DimenUtil;
 import java.io.PrintStream;
 
 /**
- * Created by missevan on 2017/5/4.
+ * Created by dsq on 2017/5/4.
  */
 
 public class DubbingWaveformView extends WaveformView {

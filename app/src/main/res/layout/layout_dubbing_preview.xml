@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:app="http://schemas.android.com/apk/res-auto"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:background="#282828"
+             android:clipChildren="false">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44.0dp"
+            android:background="#ff282828"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1.0">
+
+                <ImageView
+                    android:id="@+id/back"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:paddingLeft="16dp"
+                    android:paddingRight="16dp"
+                    android:scaleType="center"
+                    android:src="@drawable/dubbing_icon_cancel"/>
+            </FrameLayout>
+
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="0.66">
+
+                <TextView
+                    android:id="@+id/video_time"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="00:00/00:00"
+                    android:textColor="@color/white"
+                    android:textSize="14.0sp"/>
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1.0">
+
+                <TextView
+                    android:id="@+id/complete"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center|right"
+                    android:layout_marginRight="10.0dp"
+                    android:gravity="bottom"
+                    android:text="保存"
+                    android:textColor="#ffbdbdbd"
+                    android:textSize="15sp"/>
+            </FrameLayout>
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/video_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.example.missevan.mydubbing.view.DubbingVideoView
+                android:id="@+id/videoView"
+                android:layout_width="match_parent"
+                android:layout_height="200.0dp"/>
+
+            <TextView
+                android:id="@+id/waitingNum"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_gravity="center"
+                android:background="@drawable/dubbing_waiting_bg"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:textColor="#ffffffff"
+                android:textSize="30sp"
+                android:visibility="gone"
+                tools:text="3"/>
+
+            <TextView
+                android:id="@+id/fastProgress"
+                android:layout_width="90.0dp"
+                android:layout_height="90.0dp"
+                android:layout_gravity="center"
+                android:background="@drawable/dubbing_waiting_bg"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="0%"
+                android:textColor="#ffffffff"
+                android:textSize="30.0sp"
+                android:visibility="gone"/>
+
+            <RelativeLayout
+                android:id="@+id/videoDialog"
+                android:layout_width="match_parent"
+                android:layout_height="200.0dp"
+                android:background="#d8000000"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginBottom="15.0dp"
+                    android:drawableBottom="@drawable/dubbing_photo_prompt_below"
+                    android:drawablePadding="8.0dp"
+                    android:gravity="center_horizontal"
+                    android:text="点击字幕可以进行创意改编"
+                    android:textColor="@color/colorWhite"
+                    android:textSize="16.0sp"/>
+            </RelativeLayout>
+            <SeekBar
+                android:id="@+id/progress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100"
+                android:maxHeight="2.0dp"
+                android:minHeight="2.0dp"
+                android:layout_gravity="bottom"
+                android:progressDrawable="@drawable/dubbing_progressbar3"/>
+
+        </FrameLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="3dp"
+                android:layout_height="11dp"
+                android:layout_gravity="center_vertical"
+                android:background="#a33c3c"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="6dp"
+                android:text="人声"
+                android:textColor="#a33c3c"
+                android:textSize="12sp"/>
+
+            <android.support.v4.widget.Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="6dp"
+                android:text="背景"
+                android:textColor="#a33c3c"
+                android:textSize="12sp"/>
+
+            <View
+                android:layout_width="3dp"
+                android:layout_height="11dp"
+                android:layout_gravity="center_vertical"
+                android:background="#a33c3c"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:padding="16dp">
+
+                <com.example.missevan.mydubbing.view.CircleModifierView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_audio_modifier"
+                    app:apsv_animated="false"
+                    app:apsv_dragged="true"
+                    app:apsv_draw_width="14dp"
+                    app:apsv_model_bg_enabled="true"
+                    app:apsv_rounded="true"
+                    app:apsv_shadowed="false"/>
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:text="100"
+                        android:textColor="#bdbdbd"
+                        android:textSize="28sp"
+                        android:layout_gravity="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                    <TextView
+                        android:text="音量"
+                        android:textColor="#bdbdbd"
+                        android:textSize="10sp"
+                        android:layout_width="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+            </FrameLayout>
+
+            <View
+                android:layout_width="0.5dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_audio_modifier_divider"/>
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:padding="16dp">
+
+                <com.example.missevan.mydubbing.view.CircleModifierView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_audio_modifier"
+                    app:apsv_animated="false"
+                    app:apsv_dragged="true"
+                    app:apsv_draw_width="14dp"
+                    app:apsv_model_bg_enabled="true"
+                    app:apsv_rounded="true"
+                    app:apsv_shadowed="false"/>
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:text="100"
+                        android:textColor="#bdbdbd"
+                        android:textSize="28sp"
+                        android:layout_gravity="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                    <TextView
+                        android:text="音量"
+                        android:textColor="#bdbdbd"
+                        android:textSize="10sp"
+                        android:layout_width="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+            </FrameLayout>
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

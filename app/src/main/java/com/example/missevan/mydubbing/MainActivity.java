@@ -4,12 +4,15 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
+import android.content.res.AssetManager;
 import android.graphics.drawable.LevelListDrawable;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.CountDownTimer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -38,7 +41,10 @@ import com.example.missevan.mydubbing.view.DubbingSubtitleView;
 import com.example.missevan.mydubbing.view.WaveformView;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -46,9 +52,11 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity implements DubbingVideoView.OnEventListener,
         AudioHelper.OnAudioRecordPlaybackListener {
     //    private static final String VIDEO = "/sdcard/dubbing/source/4625866548090916879/4625866548090916879.mp4";
-    private static final String VIDEO = "/sdcard/dubbing/source/4803081086444687938/4803081086444687938.mp4";
+//    private static final String VIDEO = "/sdcard/dubbing/source/4803081086444687938/4803081086444687938.mp4";
+    private static final String VIDEO = "material/4803081086444687938.mp4";
     //    private static final String VIDEO = "/sdcard/test.mp4";
-    private static final String AUDIO = "/sdcard/dubbing/source/4625866548090916879/4768294820698703403.mp3";
+//    private static final String AUDIO = "/sdcard/dubbing/source/4625866548090916879/4768294820698703403.mp3";
+    private static final String AUDIO = "material/5314291602012189567.mp3";
     private static final String BASE = "/sdcard/MyDubbing/audio_temp/";
     //    private static String MP3_PATH;
     private static String WAV_PATH;
@@ -131,13 +139,18 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     @Override
     protected void onResume() {
         super.onResume();
-        mDubbingVideoView.onResume();
+        if (mDubbingVideoView != null) {
+            mDubbingVideoView.onResume();
+        }
+        hideNavigationBar();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mDubbingVideoView.onPause();
+        if (mDubbingVideoView != null) {
+            mDubbingVideoView.onPause();
+        }
     }
 
     @Override
@@ -174,7 +187,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mProgressBar = (ProgressBar) findViewById(R.id.progress);
         mWaveformView = (WaveformView) findViewById(R.id.dubbingWaveform);
         mDubbingVideoView = (DubbingVideoView) findViewById(R.id.videoView);
-        mDubbingVideoView.setPara(VIDEO, "", false, 0, "", this, this);
+        mDubbingVideoView.setPara(processMaterialMp4FromAssets(), "", false, 0, "", this, this);
         mAction = (ImageView) findViewById(R.id.action);
         mAction.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -196,8 +209,77 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
             @Override
             public void onClick(View v) {
                 // TODO: 2017/4/28 COMPLETE DUBBING AND SEND SERVICES TO ENCODING
+                DubbingPreviewActivity.launch(MainActivity.this);
             }
         });
+    }
+
+    private void hideNavigationBar() {
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    }
+
+
+    private String processMaterialMp4FromAssets() {
+        File dir = getExternalFilesDir("material");
+        File mp4 = new File(dir, "material.mp4");
+        InputStream is = null;
+        if (!mp4.exists()) {
+            Log.e("ddd", "copy asset mp4 to file");
+            AssetManager manager = getAssets();
+            FileOutputStream fos = null;
+            try {
+                is = manager.open(VIDEO);
+                fos = new FileOutputStream(mp4);
+                byte[] bytes = new byte[1024];
+                int read;
+                while ((read = is.read(bytes)) != -1) {
+                    fos.write(bytes, 0, read);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (fos != null) {
+                    try {
+                        fos.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        return mp4.getAbsolutePath();
+    }
+    private String processMaterialMp3FromAssets() {
+        File dir = getExternalFilesDir("material");
+        File mp3 = new File(dir, "material.mp3");
+        InputStream is = null;
+        if (!mp3.exists()) {
+            Log.e("ddd", "copy asset mp3 to file");
+            AssetManager manager = getAssets();
+            FileOutputStream fos = null;
+            try {
+                is = manager.open(AUDIO);
+                fos = new FileOutputStream(mp3);
+                byte[] bytes = new byte[1024];
+                int read;
+                while ((read = is.read(bytes)) != -1) {
+                    fos.write(bytes, 0, read);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (fos != null) {
+                    try {
+                        fos.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        return mp3.getAbsolutePath();
     }
 
     /**
@@ -260,7 +342,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
                 if (mDubbingVideoView.isPlaying()) {
                     mDubbingVideoView.pause(DubbingVideoView.MODE_PREVIEW);
                 }
-                SubtitleEditActivity.launch(MainActivity.this, (ArrayList)srtEntityList, 0);
+                SubtitleEditActivity.launch(MainActivity.this, (ArrayList) srtEntityList, 0);
             }
         });
         for (SRTEntity entity : srtEntityList) {
