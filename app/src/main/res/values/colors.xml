@@ -16,4 +16,8 @@
     <color name="timecode_shadow">#aa000000</color>
     <color name="wave_line">#ff4b4b4b</color>
     <color name="subtitle_edit_text_cursor">#ff902a2e</color>
+
+    <color name="round_corner_progress_bar_background_default">#ff161616</color>
+    <color name="round_corner_progress_bar_progress_default">#ffb23939</color>
+    <color name="round_corner_progress_bar_secondary_progress_default">#ff282020</color>
 </resources>

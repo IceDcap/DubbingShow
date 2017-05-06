@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="mix_voice_progress_bar" type="id"/>
+    <item name="space_progress_bar" type="id"/>
+    <item name="echo_progress_bar" type="id"/>
+</resources>

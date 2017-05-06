@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:app="http://schemas.android.com/apk/res-auto"
-             xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              android:background="#282828"
@@ -79,60 +78,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="200.0dp"/>
 
-            <TextView
-                android:id="@+id/waitingNum"
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:layout_gravity="center"
-                android:background="@drawable/dubbing_waiting_bg"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:textColor="#ffffffff"
-                android:textSize="30sp"
-                android:visibility="gone"
-                tools:text="3"/>
-
-            <TextView
-                android:id="@+id/fastProgress"
-                android:layout_width="90.0dp"
-                android:layout_height="90.0dp"
-                android:layout_gravity="center"
-                android:background="@drawable/dubbing_waiting_bg"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="0%"
-                android:textColor="#ffffffff"
-                android:textSize="30.0sp"
-                android:visibility="gone"/>
-
-            <RelativeLayout
-                android:id="@+id/videoDialog"
-                android:layout_width="match_parent"
-                android:layout_height="200.0dp"
-                android:background="#d8000000"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginBottom="15.0dp"
-                    android:drawableBottom="@drawable/dubbing_photo_prompt_below"
-                    android:drawablePadding="8.0dp"
-                    android:gravity="center_horizontal"
-                    android:text="点击字幕可以进行创意改编"
-                    android:textColor="@color/colorWhite"
-                    android:textSize="16.0sp"/>
-            </RelativeLayout>
             <SeekBar
                 android:id="@+id/progress"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
                 android:max="100"
                 android:maxHeight="2.0dp"
                 android:minHeight="2.0dp"
-                android:layout_gravity="bottom"
                 android:progressDrawable="@drawable/dubbing_progressbar3"/>
 
         </FrameLayout>
@@ -188,39 +142,21 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:padding="16dp">
+                android:paddingBottom="20dp"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp">
 
-                <com.example.missevan.mydubbing.view.CircleModifierView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:background="@drawable/bg_audio_modifier"
-                    app:apsv_animated="false"
-                    app:apsv_dragged="true"
-                    app:apsv_draw_width="14dp"
-                    app:apsv_model_bg_enabled="true"
-                    app:apsv_rounded="true"
-                    app:apsv_shadowed="false"/>
-                <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_gravity="center"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        android:text="100"
-                        android:textColor="#bdbdbd"
-                        android:textSize="28sp"
-                        android:layout_gravity="center"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
-                    <TextView
-                        android:text="音量"
-                        android:textColor="#bdbdbd"
-                        android:textSize="10sp"
-                        android:layout_width="wrap_content"
-                        android:layout_gravity="center_horizontal"
-                        android:layout_height="wrap_content"/>
-                </LinearLayout>
+                <include
+                    android:id="@+id/personal_volume_modifier"
+                    layout="@layout/volume_modifier"/>
+                <include
+                    android:id="@+id/personal_pitch_voice_modifier"
+                    layout="@layout/volume_modifier"
+                    android:visibility="gone"/>
+                <include
+                    android:id="@+id/personal_control_voice_modifier"
+                    layout="@layout/control_voice_modifier"
+                    android:visibility="gone"/>
 
             </FrameLayout>
 
@@ -233,48 +169,100 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:padding="16dp">
+                android:paddingBottom="20dp"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp">
 
-                <com.example.missevan.mydubbing.view.CircleModifierView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:background="@drawable/bg_audio_modifier"
-                    app:apsv_animated="false"
-                    app:apsv_dragged="true"
-                    app:apsv_draw_width="14dp"
-                    app:apsv_model_bg_enabled="true"
-                    app:apsv_rounded="true"
-                    app:apsv_shadowed="false"/>
-                <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_gravity="center"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        android:text="100"
-                        android:textColor="#bdbdbd"
-                        android:textSize="28sp"
-                        android:layout_gravity="center"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
-                    <TextView
-                        android:text="音量"
-                        android:textColor="#bdbdbd"
-                        android:textSize="10sp"
-                        android:layout_width="wrap_content"
-                        android:layout_gravity="center_horizontal"
-                        android:layout_height="wrap_content"/>
-                </LinearLayout>
+                <include
+                    android:id="@+id/background_volume_modifier"
+                    layout="@layout/volume_modifier"/>
+                <include
+                    android:id="@+id/background_control_voice_modifier"
+                    layout="@layout/control_voice_modifier"
+                    android:visibility="gone"/>
 
             </FrameLayout>
         </LinearLayout>
 
-        <FrameLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
 
+            <RadioGroup
+                android:id="@+id/personal_menu"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp">
 
-        </FrameLayout>
+                <RadioButton
+                    android:id="@+id/personal_volume_menu"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/icon_modify_volume"
+                    android:button="@null"
+                    android:checked="true"/>
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
+                <RadioButton
+                    android:id="@+id/personal_pitch_voice_menu"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/icon_pitch_voice"
+                    android:button="@null"/>
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
+                <RadioButton
+                    android:id="@+id/personal_control_voice_menu"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/icon_control_voice"
+                    android:button="@null"/>
+            </RadioGroup>
+
+            <RadioGroup
+                android:id="@+id/background_menu"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp">
+
+                <RadioButton
+                    android:id="@+id/background_volume_menu"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/icon_modify_volume"
+                    android:button="@null"
+                    android:checked="true"/>
+
+                <RadioButton
+                    android:id="@+id/background_control_voice_menu"
+                    android:layout_marginLeft="43dp"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/icon_control_voice"
+                    android:button="@null"/>
+
+            </RadioGroup>
+        </LinearLayout>
     </LinearLayout>
 </FrameLayout>

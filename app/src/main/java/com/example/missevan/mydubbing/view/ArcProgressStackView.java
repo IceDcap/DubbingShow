@@ -57,6 +57,19 @@ import java.util.Random;
  */
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class ArcProgressStackView extends View {
+    private List<OnDragProgressListener> mListeners = new ArrayList<>();
+
+    public void registerListener(OnDragProgressListener listener) {
+        if (!mListeners.contains(listener)) {
+            mListeners.add(listener);
+        }
+    }
+
+    public void unregisterListener(OnDragProgressListener listener) {
+        if (mListeners.contains(listener)) {
+            mListeners.remove(listener);
+        }
+    }
 
     // Default values
     private final static float DEFAULT_START_ANGLE = 270.0F;
@@ -764,6 +777,11 @@ public class ArcProgressStackView extends View {
         // Set model progress and invalidate
         float touchProgress = Math.round(MAX_PROGRESS / mSweepAngle * currentAngle);
         model.setProgress(touchProgress);
+        if (mListeners.size() > 0) {
+            for (OnDragProgressListener listener : mListeners) {
+                listener.onProgress(touchProgress);
+            }
+        }
     }
 
     @Override
@@ -1134,5 +1152,9 @@ public class ArcProgressStackView extends View {
 
     public enum IndicatorOrientation {
         HORIZONTAL, VERTICAL
+    }
+
+    public interface OnDragProgressListener {
+        void onProgress(float progress);
     }
 }
