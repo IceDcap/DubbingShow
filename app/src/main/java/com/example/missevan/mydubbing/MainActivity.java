@@ -4,22 +4,18 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.drawable.LevelListDrawable;
-import android.media.AudioFormat;
 import android.media.AudioManager;
-import android.media.AudioRecord;
 import android.media.MediaPlayer;
-import android.media.MediaRecorder;
-import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.CountDownTimer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.text.format.DateFormat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -27,14 +23,11 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.missevan.mydubbing.audio.AudioHelper;
-import com.example.missevan.mydubbing.audio.ExtAudioRecorder;
-import com.example.missevan.mydubbing.audio.Mp3Recorder;
-import com.example.missevan.mydubbing.audio.WAVRecorder;
 import com.example.missevan.mydubbing.entity.SRTEntity;
 import com.example.missevan.mydubbing.utils.Config;
+import com.example.missevan.mydubbing.utils.MediaUtil;
 import com.example.missevan.mydubbing.utils.SRTUtil;
 import com.example.missevan.mydubbing.view.DubbingVideoView;
 import com.example.missevan.mydubbing.view.DubbingSubtitleView;
@@ -44,19 +37,30 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements DubbingVideoView.OnEventListener,
         AudioHelper.OnAudioRecordPlaybackListener {
-    //    private static final String VIDEO = "/sdcard/dubbing/source/4625866548090916879/4625866548090916879.mp4";
-//    private static final String VIDEO = "/sdcard/dubbing/source/4803081086444687938/4803081086444687938.mp4";
-    private static final String VIDEO = "material/4803081086444687938.mp4";
-    //    private static final String VIDEO = "/sdcard/test.mp4";
-//    private static final String AUDIO = "/sdcard/dubbing/source/4625866548090916879/4768294820698703403.mp3";
-    private static final String AUDIO = "material/5314291602012189567.mp3";
+    private static final int MATERIAL = 1;
+    private static final int[] SUBTITLE = new int[]{
+            R.raw.subtitle,
+            R.raw.subtitle1,
+    };
+    private static final String[] VIDEO = new String[]{
+            "material/4803081086444687938.mp4",
+            "material2/4911222198272423589.mp4"
+    };
+    private static final String[][] AUDIO = {
+            {
+                    "material/5314291602012189567.mp3"
+            },
+            {
+                    "material2/4961513952477274315.mp3",
+                    "material2/5228034864680729630.mp3",
+            }
+    };
+    private File mVideoFile;
     private static final String BASE = "/sdcard/MyDubbing/audio_temp/";
     //    private static String MP3_PATH;
     private static String WAV_PATH;
@@ -187,7 +191,30 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mProgressBar = (ProgressBar) findViewById(R.id.progress);
         mWaveformView = (WaveformView) findViewById(R.id.dubbingWaveform);
         mDubbingVideoView = (DubbingVideoView) findViewById(R.id.videoView);
-        mDubbingVideoView.setPara(processMaterialMp4FromAssets(), "", false, 0, "", this, this);
+        new AsyncTask<Void, Void, Void>(){
+            String video = "";
+            AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+                    .setMessage("正在处理...")
+                    .create();
+
+            @Override
+            protected void onPreExecute() {
+                dialog.show();
+            }
+
+            @Override
+            protected Void doInBackground(Void... params) {
+                video = processMaterialMp4FromAssets();
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                dialog.cancel();
+                mDubbingVideoView.setPara(video, "", false, 0, "", MainActivity.this, MainActivity.this);
+            }
+        }.execute();
+
         mAction = (ImageView) findViewById(R.id.action);
         mAction.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -209,7 +236,39 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
             @Override
             public void onClick(View v) {
                 // TODO: 2017/4/28 COMPLETE DUBBING AND SEND SERVICES TO ENCODING
-                DubbingPreviewActivity.launch(MainActivity.this);
+                final AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+                        .setMessage("正在处理中....")
+                        .create();
+
+                dialog.cancel();
+
+                new AsyncTask<Void, Void, Void>() {
+                    String record;
+                    String video;
+                    String[] background;
+
+                    @Override
+                    protected void onPreExecute() {
+                        dialog.show();
+                    }
+
+                    @Override
+                    protected Void doInBackground(Void... params) {
+                        record = mAudioHelper.getRecordFilePath();
+                        video = processMaterialMp4FromAssets();
+                        background = processMaterialMp3FromAssets();
+                        return null;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        dialog.cancel();
+                        DubbingPreviewActivity.launch(MainActivity.this,
+                                record,
+                                video,
+                                background);
+                    }
+                }.execute();
             }
         });
     }
@@ -223,15 +282,16 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
 
     private String processMaterialMp4FromAssets() {
         File dir = getExternalFilesDir("material");
-        File mp4 = new File(dir, "material.mp4");
+        String name = VIDEO[MATERIAL].split("/")[1];
+        mVideoFile = new File(dir, name/*"material.mp4"*/);
         InputStream is = null;
-        if (!mp4.exists()) {
+        if (!mVideoFile.exists()) {
             Log.e("ddd", "copy asset mp4 to file");
             AssetManager manager = getAssets();
             FileOutputStream fos = null;
             try {
-                is = manager.open(VIDEO);
-                fos = new FileOutputStream(mp4);
+                is = manager.open(VIDEO[MATERIAL]);
+                fos = new FileOutputStream(mVideoFile);
                 byte[] bytes = new byte[1024];
                 int read;
                 while ((read = is.read(bytes)) != -1) {
@@ -249,37 +309,42 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
                 }
             }
         }
-        return mp4.getAbsolutePath();
+        return mVideoFile.getAbsolutePath();
     }
-    private String processMaterialMp3FromAssets() {
+
+    private String[] processMaterialMp3FromAssets() {
+        String[] res = new String[AUDIO[MATERIAL].length];
         File dir = getExternalFilesDir("material");
-        File mp3 = new File(dir, "material.mp3");
-        InputStream is = null;
-        if (!mp3.exists()) {
-            Log.e("ddd", "copy asset mp3 to file");
-            AssetManager manager = getAssets();
-            FileOutputStream fos = null;
-            try {
-                is = manager.open(AUDIO);
-                fos = new FileOutputStream(mp3);
-                byte[] bytes = new byte[1024];
-                int read;
-                while ((read = is.read(bytes)) != -1) {
-                    fos.write(bytes, 0, read);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (fos != null) {
-                    try {
-                        fos.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+        for (int i = 0; i < AUDIO[MATERIAL].length; i++) {
+            File mp3 = new File(dir, AUDIO[MATERIAL][i].split("/")[1]);
+            InputStream is = null;
+            if (!mp3.exists()) {
+                Log.e("ddd", "copy asset mp3 to file");
+                AssetManager manager = getAssets();
+                FileOutputStream fos = null;
+                try {
+                    is = manager.open(AUDIO[MATERIAL][0]);
+                    fos = new FileOutputStream(mp3);
+                    byte[] bytes = new byte[1024];
+                    int read;
+                    while ((read = is.read(bytes)) != -1) {
+                        fos.write(bytes, 0, read);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (fos != null) {
+                        try {
+                            fos.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
+                res[i] = mp3.getAbsolutePath();
             }
         }
-        return mp3.getAbsolutePath();
+        return res;
     }
 
     /**
@@ -333,7 +398,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     private void checkRoles(File material) {
         primaryRole = "";
         secondRole = "";
-        srtEntityList = SRTUtil.processSrtFromFile(this, R.raw.subtitle2);
+        srtEntityList = SRTUtil.processSrtFromFile(this, SUBTITLE[MATERIAL]);
         if (srtEntityList == null || srtEntityList.size() == 0) return;
         mDubbingSubtitleView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -367,7 +432,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
      * REFRESH TIME >> INCLUDE: PROGRESSBAR TIME-INDICATOR SRT-SUBTITLE
      */
     private void refreshTime(long playTime, long totalTime, int videoMode) {
-        String str = generateTime(playTime) + "/" + generateTime(totalTime);
+        String str = MediaUtil.generateTime(playTime, totalTime);
         mVideoTime.setText(str);
         if (mDubbingSubtitleView != null) {
             mDubbingSubtitleView.processTime((int) playTime);
@@ -380,22 +445,11 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mProgressBar.setSecondaryProgress(i);
     }
 
-    public static String generateTime(long time) {
-        int k = (int) Math.floor(time / 1000.0D);
-        int i = k % 60;
-        int j = k / 60 % 60;
-        k /= 3600;
-        if (k > 0) {
-            return String.format(Locale.US, "%02d:%02d:%02d", k, j, i);
-        }
-        return String.format(Locale.US, "%02d:%02d", j, i);
-    }
-
     private void resetPreviewUI() {
         mProgressBar.setProgress(0);
         mProgressBar.setSecondaryProgress(0);
         if (mVideoTime != null) {
-            mVideoTime.setText(generateTime(0) + "/" + generateTime(mDuration));
+            mVideoTime.setText(MediaUtil.generateTime(0, mDuration));
         }
         mDubbingSubtitleView.reset();
         mAction.setEnabled(true);
@@ -441,7 +495,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     public void onVideoPrepared(long duration) {
         mDuration = duration;
         if (mVideoTime != null) {
-            mVideoTime.setText(generateTime(0) + "/" + generateTime(duration));
+            mVideoTime.setText(MediaUtil.generateTime(0, mDuration));
         }
     }
 
@@ -533,7 +587,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     }
 
     @Override
-    public void onVideoPlay() {
+    public void onWhiteVideoPlay() {
 
     }
 

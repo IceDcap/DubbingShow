@@ -124,6 +124,7 @@ public class DubbingWaveformView extends WaveformView {
         return pos > mMaxPos ? mMaxPos : pos;
     }
 
+    // view scroll update ui
     private void updateDisplay(boolean isForceDraw) {
 
     }

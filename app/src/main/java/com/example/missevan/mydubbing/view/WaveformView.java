@@ -342,6 +342,8 @@ public class WaveformView extends View {
 
 
         int borderOffset = DimenUtil.dip2px(getContext(), 9);
+
+        // draw two line
         canvas.drawLine(0, mPaddingTop, measuredWidth, mPaddingTop, mGridPaint);
         canvas.drawLine(0, measuredHeight - mPaddingBottom, measuredWidth,
                 measuredHeight - mPaddingBottom, mGridPaint);
@@ -360,7 +362,7 @@ public class WaveformView extends View {
             }
         }
 
-        //todo
+        //todo draw time form degree
 
 
 //        Object localObject1 = "draw()";
@@ -798,8 +800,6 @@ public class WaveformView extends View {
             this.drawAreaHeight = measuredHeight - mPaddingTop - mPaddingBottom - DimenUtil.dip2px(getContext(), 6);
             this.indicatorFinalPos = (measuredWidth - progressIndicator.getWidth()) / 2;
         }
-        Log.e("ccc", "measuredWidth = " + measuredWidth + "\tmeasuredHeight = " + measuredHeight + "\tdrawAreaHeight = " + drawAreaHeight +
-                "\tindicatorFinalPos = " + indicatorFinalPos);
     }
 
     @Override

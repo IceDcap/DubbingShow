@@ -57,7 +57,7 @@ public class AudioHelper {
         if (null != f) {
             mCachePath = f.getAbsolutePath();
         }
-        mFile = new File(mCachePath, System.currentTimeMillis() + ".pcm");
+        mFile = new File(mCachePath,/* System.currentTimeMillis() +*/ "tmp.pcm");
         try {
             mRandomAccessFile = new RandomAccessFile(mFile, "rw");
         } catch (FileNotFoundException e) {
@@ -82,6 +82,10 @@ public class AudioHelper {
             dir.mkdirs();
         }
         mFile = new File(mCachePath, System.currentTimeMillis() + ".pcm");
+    }
+
+    public void setFile(File file) {
+        mFile = file;
     }
 
     private void recordAudio(final long offset) {
@@ -195,6 +199,7 @@ public class AudioHelper {
             short[] samples = getSamples();
             mSamples = ShortBuffer.wrap(samples);
             mNumSamples = samples.length;
+            Log.e("ccc", ">>>>> mNumSamples = " + mNumSamples);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -293,6 +298,13 @@ public class AudioHelper {
             mShouldContinue = false;
             mAudioPlayback = null;
         }
+    }
+
+    public String getRecordFilePath() {
+        if (mFile != null) {
+            return mFile.getAbsolutePath();
+        }
+        return null;
     }
 
 

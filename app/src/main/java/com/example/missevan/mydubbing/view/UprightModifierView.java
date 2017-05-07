@@ -3,9 +3,7 @@ package com.example.missevan.mydubbing.view;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
-import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -13,9 +11,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.missevan.mydubbing.R;
@@ -45,6 +41,8 @@ public class UprightModifierView extends FrameLayout implements View.OnTouchList
     private int mSpacePositionY;
     private int mEchoPositionX;
     private int mEchoPositionY;
+
+    private OnModifierListener mOnModifierListener;
 
     public UprightModifierView(Context context) {
         this(context, null);
@@ -82,17 +80,17 @@ public class UprightModifierView extends FrameLayout implements View.OnTouchList
         final LayoutInflater inflater = LayoutInflater.from(context);
         // init background view
         mScalePlate = inflater.inflate(R.layout.layout_scale_plate, null, false);
-//        mMixVoiceProgressBar = new RoundCornerProgressBar(context, attrs, defStyleAttr);
+
         mMixVoiceProgressBar = (RoundCornerProgressBar) inflater.inflate(R.layout.voice_control_bar, null, false);
         mMixVoiceProgressBar.setId(R.id.mix_voice_progress_bar);
         mMixVoiceProgress = (LinearLayout) mMixVoiceProgressBar.findViewById(R.id.layout_progress);
         mMixVoiceProgressBar.setTitle("混响");
-//        mSpaceProgressBar = new RoundCornerProgressBar(context, attrs, defStyleAttr);
+
         mSpaceProgressBar = (RoundCornerProgressBar) inflater.inflate(R.layout.voice_control_bar, null, false);
         mSpaceProgressBar.setId(R.id.space_progress_bar);
         mSpaceProgress = (LinearLayout) mSpaceProgressBar.findViewById(R.id.layout_progress);
         mSpaceProgressBar.setTitle("空间");
-//        mEchoProgressBar = new RoundCornerProgressBar(context, attrs, defStyleAttr);
+
         mEchoProgressBar = (RoundCornerProgressBar) inflater.inflate(R.layout.voice_control_bar, null, false);
         mEchoProgressBar.setId(R.id.echo_progress_bar);
         mEchoProgress = (LinearLayout) mEchoProgressBar.findViewById(R.id.layout_progress);
@@ -168,7 +166,6 @@ public class UprightModifierView extends FrameLayout implements View.OnTouchList
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
         mix.leftMargin = mDegreeTextWidth;
-//        mMixPositionX = mix.leftMargin;// + mMixVoiceProgressBar.getWidth() / 2;
         addView(mMixVoiceProgressBar, mix);
 
         final int viewSpace = mProgressBarAreaWidth / 3;
@@ -178,14 +175,12 @@ public class UprightModifierView extends FrameLayout implements View.OnTouchList
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
         space.leftMargin = mDegreeTextWidth + viewSpace;
-//        mSpacePositionX = space.leftMargin;// + mSpaceProgressBar.getWidth() / 2;
         addView(mSpaceProgressBar, space);
 
         final FrameLayout.LayoutParams echo = new LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
         echo.leftMargin = mDegreeTextWidth + 2 * viewSpace;
-//        mEchoPositionX = echo.leftMargin;// + mEchoProgressBar.getWidth() / 2;
         addView(mEchoProgressBar, echo);
 
     }
@@ -271,6 +266,9 @@ public class UprightModifierView extends FrameLayout implements View.OnTouchList
                 RoundCornerProgressBar rb = (RoundCornerProgressBar) v;
                 rb.setProgress(progress);
                 drawProgressIndicator((RoundCornerProgressBar) v);
+                if (mOnModifierListener != null) {
+                    mOnModifierListener.onModifying(progress);
+                }
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
@@ -278,6 +276,9 @@ public class UprightModifierView extends FrameLayout implements View.OnTouchList
             default:
                 // Reset values
                 removeProgressIndicator((RoundCornerProgressBar) v);
+                if (mOnModifierListener != null) {
+                    mOnModifierListener.onModified((totalHeight - touchY) / totalHeight * 100);
+                }
                 break;
         }
 
@@ -286,5 +287,15 @@ public class UprightModifierView extends FrameLayout implements View.OnTouchList
             getParent().requestDisallowInterceptTouchEvent(true);
 
         return true;
+    }
+
+    public void setOnModifierListener(OnModifierListener onModifierListener) {
+        mOnModifierListener = onModifierListener;
+    }
+
+    public interface OnModifierListener {
+        void onModified(float progress);
+
+        void onModifying(float progress);
     }
 }

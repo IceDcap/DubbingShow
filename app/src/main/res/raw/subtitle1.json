@@ -1,0 +1,41 @@
+{
+  "status": "success",
+  "info": {
+    "video": "dub/201704/24/test.mp4",
+    "audios": [
+      "dub/201704/24/test.mp3"
+    ],
+    "subtitle": [
+      {
+        "context": "有容愿效陛下",
+        "stime": "962",
+        "etime": "2000",
+        "role": "徐有容"
+      },
+      {
+        "context": "为天下而生",
+        "stime": "2840",
+        "etime": "3840",
+        "role": "徐有容"
+      },
+      {
+        "context": "为天下而死",
+        "stime": "4460",
+        "etime": "5460",
+        "role": "徐有容"
+      },
+      {
+        "context": "绝不让魔族",
+        "stime": "6115",
+        "etime": "7115",
+        "role": "徐有容"
+      },
+      {
+        "context": "踏进我国土半步",
+        "stime": "7434",
+        "etime": "8434",
+        "role": "徐有容"
+      }
+    ]
+  }
+}

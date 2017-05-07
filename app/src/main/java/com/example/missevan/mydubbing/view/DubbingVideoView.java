@@ -235,6 +235,9 @@ public class DubbingVideoView extends FrameLayout implements
         mode = MODE_DUBBING;
     }
 
+    private void play() {
+        play(mode);
+    }
 
     private void play(int mode) {
         mPlay.setVisibility(GONE);
@@ -273,6 +276,7 @@ public class DubbingVideoView extends FrameLayout implements
             mIjkVideoView.start();
             if (onEventListener != null) {
                 onEventListener.onPlayback(0);
+                onEventListener.onWhiteVideoPlay();
             }
         }
 
@@ -367,6 +371,10 @@ public class DubbingVideoView extends FrameLayout implements
 
     public boolean isPlaying() {
         return mIjkVideoView.isPlaying();
+    }
+
+    public void setOnEventListener(OnEventListener onEventListener) {
+        this.onEventListener = onEventListener;
     }
 
     /**
@@ -466,7 +474,7 @@ public class DubbingVideoView extends FrameLayout implements
                     pause(MODE_PREVIEW);
                 break;
             case R.id.play:
-                play(MODE_PREVIEW);
+                play();
                 break;
         }
     }
@@ -528,10 +536,97 @@ public class DubbingVideoView extends FrameLayout implements
 
         void onVideoPause();
 
-        void onVideoPlay();
+        void onWhiteVideoPlay();
 
         void reset(boolean keepStatus);
 
         void onPlayback(int pos);
+    }
+
+    public class DubbingVideoViewEventAdapter implements OnEventListener{
+        @Override
+        public void onVideoPrepared(long duration) {
+
+        }
+
+        @Override
+        public void onDoubleClick() {
+
+        }
+
+        @Override
+        public void onError() {
+
+        }
+
+        @Override
+        public void onLivingChanged() {
+
+        }
+
+        @Override
+        public void onOverEightSeconds() {
+
+        }
+
+        @Override
+        public boolean onPlayTimeChanged(long playTime, long totalTime, int videoMode) {
+            return false;
+        }
+
+        @Override
+        public void onPreviewPlay() {
+
+        }
+
+        @Override
+        public void onPreviewStop() {
+
+        }
+
+        @Override
+        public void onSoundPreview() {
+
+        }
+
+        @Override
+        public void onStarToPlay() {
+
+        }
+
+        @Override
+        public void onStartTrackingTouch() {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch() {
+
+        }
+
+        @Override
+        public void onVideoCompletion() {
+
+        }
+
+        @Override
+        public void onVideoPause() {
+
+        }
+
+        @Override
+        public void onWhiteVideoPlay() {
+
+        }
+
+        @Override
+        public void reset(boolean keepStatus) {
+
+        }
+
+        @Override
+        public void onPlayback(int pos) {
+
+        }
     }
 }

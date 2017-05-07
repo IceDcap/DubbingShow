@@ -736,8 +736,8 @@ public class ArcProgressStackView extends View {
         return degrees;
     }
 
-    private void handleActionMoveModel(final MotionEvent event) {
-        if (mActionMoveModelIndex == DISABLE_ANIMATE_INDEX) return;
+    private float handleActionMoveModel(final MotionEvent event) {
+        if (mActionMoveModelIndex == DISABLE_ANIMATE_INDEX) return 0;
 
         // Get current move angle
         float currentAngle = getActionMoveAngle(event.getX(), event.getY());
@@ -782,6 +782,7 @@ public class ArcProgressStackView extends View {
                 listener.onProgress(touchProgress);
             }
         }
+        return touchProgress;
     }
 
     @Override
@@ -830,6 +831,11 @@ public class ArcProgressStackView extends View {
                 mActionMoveLastSlice = DEFAULT_SLICE;
                 mActionMoveSliceCounter = 0;
                 mIsActionMoved = false;
+                if (mListeners.size() > 0) {
+                    for (OnDragProgressListener listener : mListeners) {
+                        listener.onModified(handleActionMoveModel(event));
+                    }
+                }
                 break;
         }
 
@@ -1156,5 +1162,8 @@ public class ArcProgressStackView extends View {
 
     public interface OnDragProgressListener {
         void onProgress(float progress);
+
+        void onModified(float progress);
+
     }
 }

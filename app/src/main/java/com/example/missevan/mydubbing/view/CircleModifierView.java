@@ -46,7 +46,7 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
     private View mContentView;
 
     private int mSize;
-
+    private OnModifierListener mOnModifierListener;
 
     public CircleModifierView(Context context) {
         this(context, null);
@@ -172,6 +172,16 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
         mModifierProgress = (int) progress * DEFAULT_MAX_PROGRESS / 100;
         mModifierProgressTv.setText(String.valueOf(mModifierProgress));
         requestLayout();
+        if (mOnModifierListener != null) {
+            mOnModifierListener.onModifying(progress);
+        }
+    }
+
+    @Override
+    public void onModified(float progress) {
+        if (mOnModifierListener != null) {
+            mOnModifierListener.onModified(progress);
+        }
     }
 
     @Override
@@ -186,9 +196,13 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
         super.onDetachedFromWindow();
     }
 
-    public interface OnModifierListener {
-        void onModified(int progress);
+    public void setOnModifierListener(OnModifierListener onModifierListener) {
+        mOnModifierListener = onModifierListener;
+    }
 
-        void onModifying(int progress);
+    public interface OnModifierListener {
+        void onModified(float progress);
+
+        void onModifying(float progress);
     }
 }
