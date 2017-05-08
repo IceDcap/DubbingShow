@@ -1,7 +1,9 @@
 package com.example.missevan.mydubbing.view;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -165,6 +167,11 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
 
     public ArcProgressStackView getStackView() {
         return mStackView;
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public void setIsAnimated(final boolean isAnimated) {
+        mStackView.setIsAnimated(isAnimated);
     }
 
     @Override

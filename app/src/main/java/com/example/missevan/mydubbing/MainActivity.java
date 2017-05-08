@@ -286,7 +286,6 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mVideoFile = new File(dir, name/*"material.mp4"*/);
         InputStream is = null;
         if (!mVideoFile.exists()) {
-            Log.e("ddd", "copy asset mp4 to file");
             AssetManager manager = getAssets();
             FileOutputStream fos = null;
             try {
@@ -317,9 +316,9 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         File dir = getExternalFilesDir("material");
         for (int i = 0; i < AUDIO[MATERIAL].length; i++) {
             File mp3 = new File(dir, AUDIO[MATERIAL][i].split("/")[1]);
+            res[i] = mp3.getAbsolutePath();
             InputStream is = null;
             if (!mp3.exists()) {
-                Log.e("ddd", "copy asset mp3 to file");
                 AssetManager manager = getAssets();
                 FileOutputStream fos = null;
                 try {
@@ -341,7 +340,6 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
                         }
                     }
                 }
-                res[i] = mp3.getAbsolutePath();
             }
         }
         return res;
@@ -588,6 +586,11 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
 
     @Override
     public void onWhiteVideoPlay() {
+
+    }
+
+    @Override
+    public void onWhiteVideoStop() {
 
     }
 

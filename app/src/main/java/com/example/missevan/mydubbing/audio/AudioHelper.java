@@ -5,29 +5,38 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 
 
+import android.os.Build;
 import android.os.Process;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Created by dsq on 2017/5/2.
  */
 public class AudioHelper {
     private static final String LOG_TAG = AudioHelper.class.getSimpleName();
+    private static final String NAME_AUDIO_PERSONAL = "personal-audio";
+    private static final String NAME_AUDIO_BACKGROUND = "background-audio";
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
     private static final int EOF = -1;
 
@@ -43,6 +52,7 @@ public class AudioHelper {
     private int mNumSamples; // number of samples to play
     private int mRecordBufferSize;
     private Thread mAudioPlayback;
+    private ThreadPoolExecutor mExecutorService;
 
 
     // config param
@@ -50,6 +60,8 @@ public class AudioHelper {
     private boolean mShouldContinue;
 
     private OnAudioRecordPlaybackListener mListener;
+    private MediaPlayer mMediaPlayer; // use for play background audio (mp3)
+    private AudioTrack mAudioTrack; // use for play personal audio (pcm)
 
     public AudioHelper(Context context) {
         mContext = context;
@@ -63,6 +75,8 @@ public class AudioHelper {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+        mExecutorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
+
     }
 
     public AudioHelper(Context context, OnAudioRecordPlaybackListener listener) {
@@ -116,11 +130,7 @@ public class AudioHelper {
                 final long startPoint = System.currentTimeMillis();
 
                 Log.v(LOG_TAG, "Start recording...");
-//                try {
-//                    mFileOutputStream = new FileOutputStream(mFile);
-//                } catch (FileNotFoundException e) {
-//                    e.printStackTrace();
-//                }
+
                 try {
                     mRandomAccessFile.seek(offset);
                 } catch (IOException e) {
@@ -158,18 +168,23 @@ public class AudioHelper {
 
     // FIXME: 04/05/2017 HERE HAS BUGS >> WHEN A RECORD APPEND THE LAST RECORD AND PLAY THE TWO PARTS
     // FIXME: 04/05/2017 THE FIRST TIME PLAY IS MISS THE SECOND PART AUDIO, WHEN THE SECOND PLAY IS WORKED
-    private void playAudio() {
+    private void playPCMAudio(File file, float volume) {
         int bufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE,
                 AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
         if (bufferSize == AudioTrack.ERROR || bufferSize == AudioTrack.ERROR_BAD_VALUE) {
             bufferSize = SAMPLE_RATE * 2;
         }
 
-        AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-                SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT,
-                bufferSize, AudioTrack.MODE_STREAM);
+        if (mAudioTrack == null) {
+            mAudioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
+                    SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT,
+                    bufferSize, AudioTrack.MODE_STREAM);
+            if (volume >= 0 && volume <= 1) {
+                mAudioTrack.setStereoVolume(volume, volume);
+            }
+        }
 
-        audioTrack.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener() {
+        mAudioTrack.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener() {
             @Override
             public void onMarkerReached(AudioTrack track) {
                 Log.v(LOG_TAG, "Audio file end reached");
@@ -187,19 +202,18 @@ public class AudioHelper {
                 }
             }
         });
-        audioTrack.setPositionNotificationPeriod(SAMPLE_RATE / 30); // 30 times per second
-        audioTrack.setNotificationMarkerPosition(mNumSamples);
+        mAudioTrack.setPositionNotificationPeriod(SAMPLE_RATE / 30); // 30 times per second
+        mAudioTrack.setNotificationMarkerPosition(mNumSamples);
 
-        audioTrack.play();
+        mAudioTrack.play();
 
         Log.v(LOG_TAG, "Audio file started");
 
         short[] buffer = new short[bufferSize];
         try {
-            short[] samples = getSamples();
+            short[] samples = getSamples(file);
             mSamples = ShortBuffer.wrap(samples);
             mNumSamples = samples.length;
-            Log.e("ccc", ">>>>> mNumSamples = " + mNumSamples);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -220,14 +234,121 @@ public class AudioHelper {
                 samplesToWrite = numSamplesLeft;
             }
             totalWritten += samplesToWrite;
-            audioTrack.write(buffer, 0, samplesToWrite);
+            mAudioTrack.write(buffer, 0, samplesToWrite);
         }
 
-        if (!mShouldContinue) {
-            audioTrack.release();
+        if (!mShouldContinue || mSamples.position() >= limit) {
+            mShouldContinue = false;
+            mAudioTrack.release();
+            mAudioTrack = null;
         }
 
         Log.v(LOG_TAG, "Audio streaming finished. Samples written: " + totalWritten);
+    }
+
+    private void playAudio(File file, float volume) {
+        if (file.getAbsolutePath().endsWith("mp3")) {
+            playMp3(file.getAbsolutePath(), volume);
+        } else {
+            playPCMAudio(file, volume);
+        }
+
+    }
+
+    private void playMp3(String path, final float volume) {
+        if (mMediaPlayer == null) {
+            mMediaPlayer = new MediaPlayer();
+        }
+        try {
+            mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    if (volume >= 0 && volume <= 1) {
+                        mp.setVolume(volume, volume);
+                    }
+                    mp.start();
+                }
+            });
+
+            mMediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                @Override
+                public boolean onError(MediaPlayer mp, int what, int extra) {
+                    Log.e(LOG_TAG, "Media Player onError");
+                    return false;
+                }
+            });
+
+            mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    mp.release();
+                    mMediaPlayer = null;
+                }
+            });
+
+            FileDescriptor fd = null;
+            FileInputStream fis = new FileInputStream(path);
+            fd = fis.getFD();
+            if (fd != null) {
+                mMediaPlayer.setDataSource(fd);
+                mMediaPlayer.prepare();
+//                mediaPlayer.start();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void stopMediaPlayer() {
+        if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+            mMediaPlayer.stop();
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
+    }
+
+    public void setVolume(float gain, MediaPlayer mediaPlayer, AudioTrack audioTrack) {
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.setVolume(gain, gain);
+        }
+        if (audioTrack != null && isPlaying()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                audioTrack.setVolume(gain);
+            } else {
+                audioTrack.setStereoVolume(gain, gain);
+            }
+        }
+    }
+
+    public void setBackgroundVolume(float gain) {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.setVolume(gain, gain);
+        }
+    }
+
+    public void setPersonalVolume(float gain) {
+        if (mAudioTrack != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mAudioTrack.setVolume(gain);
+            } else {
+                mAudioTrack.setStereoVolume(gain, gain);
+            }
+        }
+    }
+
+    /** pitch */
+    public void setPersonalPitch(float progress) {
+        if (mAudioTrack != null) {
+            final int min = 1;
+            final int max = 2 * AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_MUSIC);
+
+            int sampleRateInHz = (int) ((progress - 50) / 100f * SAMPLE_RATE + mAudioTrack.getSampleRate());
+            if (sampleRateInHz >= min && sampleRateInHz <= max) {
+                Log.e("ddd", "sampleRateInHz = " + sampleRateInHz);
+                mAudioTrack.setPlaybackRate(sampleRateInHz);
+            }
+        }
     }
 
     /**
@@ -284,7 +405,8 @@ public class AudioHelper {
         mAudioPlayback = new Thread(new Runnable() {
             @Override
             public void run() {
-                playAudio();
+//                playAudio(mFile, -1);
+                playPCMAudio(mFile, -1);
             }
         });
         mAudioPlayback.start();
@@ -299,6 +421,23 @@ public class AudioHelper {
             mAudioPlayback = null;
         }
     }
+
+    public void playCombineAudio(String personalAudioPath, String backgroundAudioPath,
+                                 float personalVolume, float backgroundVolume) {
+        if (mExecutorService == null) {
+            mExecutorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
+        }
+        AudioPlayTask personalAudio = new AudioPlayTask(NAME_AUDIO_PERSONAL, personalAudioPath, personalVolume);
+        AudioPlayTask backgroundAudio = new AudioPlayTask(NAME_AUDIO_BACKGROUND, backgroundAudioPath, backgroundVolume);
+        mShouldContinue = true;
+        mExecutorService.execute(personalAudio);
+        mExecutorService.execute(backgroundAudio);
+    }
+
+    public void stopCombineAudio() {
+        mShouldContinue = false;
+    }
+
 
     public String getRecordFilePath() {
         if (mFile != null) {
@@ -321,8 +460,8 @@ public class AudioHelper {
         return bytes;
     }
 
-    private short[] getSamples() throws IOException {
-        InputStream is = new FileInputStream(mFile);
+    private short[] getSamples(File file) throws IOException {
+        InputStream is = new BufferedInputStream(new FileInputStream(file), 8 * 1024);
         byte[] data;
         try {
             data = toByteArray(is);
@@ -374,5 +513,33 @@ public class AudioHelper {
         void onProgress(int pos);
 
         void onCompletion();
+    }
+
+    private class AudioPlayTask implements Runnable {
+        private float volume;
+        private String name;
+        private String audioFilePath;
+
+        public AudioPlayTask(String name, String audioFilePath,
+                             float volume) {
+            this.name = name;
+            this.audioFilePath = audioFilePath;
+            this.volume = volume;
+        }
+
+        @Override
+        public void run() {
+            File file = new File(audioFilePath);
+            if (file.exists()) {
+                playAudio(file, volume);
+            }
+        }
+    }
+
+    public void onPause() {
+        stopRecord();
+        stopPlay();
+        stopCombineAudio();
+        stopMediaPlayer();
     }
 }

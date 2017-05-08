@@ -80,7 +80,7 @@ public class AudioMedia implements MediaPlayer.OnCompletionListener, MediaPlayer
         return 0;
     }
 
-    public String getmUrl() {
+    public String getUrl() {
         return mUrl;
     }
 

@@ -13,6 +13,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import com.example.missevan.mydubbing.DubbingPreviewActivity;
 import com.example.missevan.mydubbing.MainActivity;
 import com.example.missevan.mydubbing.R;
 import com.example.missevan.mydubbing.audio.AudioHelper;
@@ -200,6 +201,10 @@ public class DubbingVideoView extends FrameLayout implements
         return mIjkVideoView != null ? mIjkVideoView.getVideoPath() : "";
     }
 
+    public void pause() {
+        pause(mode);
+    }
+
     public void pause(int type) {
         switch (type) {
             case MODE_DUBBING:
@@ -224,6 +229,9 @@ public class DubbingVideoView extends FrameLayout implements
                 mIjkVideoView.pause();
                 if (null != audioMedia) {
                     audioMedia.pause();
+                }
+                if (getContext() instanceof DubbingPreviewActivity && null != onEventListener) {
+                    onEventListener.onWhiteVideoStop();
                 }
                 break;
         }
@@ -471,7 +479,7 @@ public class DubbingVideoView extends FrameLayout implements
         switch (v.getId()) {
             case R.id.videoView:
                 if (mode != MODE_DUBBING)
-                    pause(MODE_PREVIEW);
+                    pause();
                 break;
             case R.id.play:
                 play();
@@ -537,96 +545,11 @@ public class DubbingVideoView extends FrameLayout implements
         void onVideoPause();
 
         void onWhiteVideoPlay();
+        void onWhiteVideoStop();
 
         void reset(boolean keepStatus);
 
         void onPlayback(int pos);
     }
 
-    public class DubbingVideoViewEventAdapter implements OnEventListener{
-        @Override
-        public void onVideoPrepared(long duration) {
-
-        }
-
-        @Override
-        public void onDoubleClick() {
-
-        }
-
-        @Override
-        public void onError() {
-
-        }
-
-        @Override
-        public void onLivingChanged() {
-
-        }
-
-        @Override
-        public void onOverEightSeconds() {
-
-        }
-
-        @Override
-        public boolean onPlayTimeChanged(long playTime, long totalTime, int videoMode) {
-            return false;
-        }
-
-        @Override
-        public void onPreviewPlay() {
-
-        }
-
-        @Override
-        public void onPreviewStop() {
-
-        }
-
-        @Override
-        public void onSoundPreview() {
-
-        }
-
-        @Override
-        public void onStarToPlay() {
-
-        }
-
-        @Override
-        public void onStartTrackingTouch() {
-
-        }
-
-        @Override
-        public void onStopTrackingTouch() {
-
-        }
-
-        @Override
-        public void onVideoCompletion() {
-
-        }
-
-        @Override
-        public void onVideoPause() {
-
-        }
-
-        @Override
-        public void onWhiteVideoPlay() {
-
-        }
-
-        @Override
-        public void reset(boolean keepStatus) {
-
-        }
-
-        @Override
-        public void onPlayback(int pos) {
-
-        }
-    }
 }

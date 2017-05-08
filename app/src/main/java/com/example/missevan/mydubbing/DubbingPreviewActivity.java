@@ -1,8 +1,10 @@
 package com.example.missevan.mydubbing;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -10,8 +12,10 @@ import android.view.WindowManager;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.missevan.mydubbing.audio.AudioHelper;
+import com.example.missevan.mydubbing.audio.SoundTouch;
 import com.example.missevan.mydubbing.listener.DubbingVideoViewEventAdapter;
 import com.example.missevan.mydubbing.utils.MediaUtil;
 import com.example.missevan.mydubbing.view.CircleModifierView;
@@ -19,6 +23,8 @@ import com.example.missevan.mydubbing.view.DubbingVideoView;
 import com.example.missevan.mydubbing.view.UprightModifierView;
 
 import java.io.File;
+import java.util.List;
+import java.util.concurrent.Future;
 
 import static com.example.missevan.mydubbing.view.DubbingVideoView.MODE_REVIEW;
 
@@ -35,6 +41,8 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     private String mVideoFilePath;
     private String[] mBackgroundFilePath;
     private long mDuration;
+    private float mPersonalVolume = -1;
+    private float mBackgroundVolume = -1;
 
     private AudioHelper mAudioHelper;
 
@@ -79,6 +87,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
 
         mPersonalCircleView = (CircleModifierView) findViewById(R.id.personal_volume_modifier);
         mPersonalPitchCircleView = (CircleModifierView) findViewById(R.id.personal_pitch_voice_modifier);
+        mPersonalPitchCircleView.setIsAnimated(false);
         mBackgroundCircleView = (CircleModifierView) findViewById(R.id.background_volume_modifier);
         mPersonalRG = (RadioGroup) findViewById(R.id.personal_menu);
         mBackgroundRG = (RadioGroup) findViewById(R.id.background_menu);
@@ -126,6 +135,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
         mDubbingVideoView = (DubbingVideoView) findViewById(R.id.videoView);
         mTime = (TextView) findViewById(R.id.video_time);
         mSeekBar = (SeekBar) findViewById(R.id.progress);
+
     }
 
     private void initData() {
@@ -150,6 +160,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     protected void onPause() {
         super.onPause();
         mDubbingVideoView.onPause();
+        mAudioHelper.onPause();
     }
 
     private void initVideoView() {
@@ -157,12 +168,13 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
         mDubbingVideoView.findViewById(R.id.preview_text_view).setVisibility(View.GONE);
         mDubbingVideoView.setMode(MODE_REVIEW);
         mDubbingVideoView.onResume();
-        mDubbingVideoView.setOnEventListener(new DubbingVideoViewEventAdapter(){
+        mDubbingVideoView.setOnEventListener(new DubbingVideoViewEventAdapter() {
             @Override
             public void onVideoPrepared(long duration) {
                 mDuration = duration;
                 mTime.setText(MediaUtil.generateTime(0, duration));
             }
+
             @Override
             public boolean onPlayTimeChanged(long playTime, long totalTime, int videoMode) {
                 refreshTime(playTime, totalTime, videoMode);
@@ -176,7 +188,14 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
 
             @Override
             public void onWhiteVideoPlay() {
-                mAudioHelper.startPlay();
+                mAudioHelper.playCombineAudio(mRecordFilePath, mBackgroundFilePath[0],
+                        mPersonalVolume, mBackgroundVolume);
+            }
+
+            @Override
+            public void onWhiteVideoStop() {
+                mAudioHelper.stopCombineAudio();
+                resetTime();
             }
         });
     }
@@ -189,7 +208,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     }
 
     private void resetTime() {
-        mTime.setText(MediaUtil.generateTime(0,mDuration));
+        mTime.setText(MediaUtil.generateTime(0, mDuration));
         mSeekBar.setProgress(0);
     }
 
@@ -221,24 +240,32 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     }
 
 
-    /** modifier ui control */
+    /**
+     * modifier ui control
+     */
     private void setModifierProgressListener() {
         mPersonalCircleView.setOnModifierListener(new CircleModifierView.OnModifierListener() {
             @Override
             public void onModified(float progress) {
                 // fix record audio volume
+                mPersonalVolume = progress / 200;
+                mAudioHelper.setPersonalVolume(mPersonalVolume);
             }
 
             @Override
             public void onModifying(float progress) {
-
+                mPersonalVolume = progress / 200;
+                mAudioHelper.setPersonalVolume(mPersonalVolume);
             }
         });
 
         mPersonalPitchCircleView.setOnModifierListener(new CircleModifierView.OnModifierListener() {
             @Override
             public void onModified(float progress) {
-
+                Log.e("ddd", "pitch progress = " + progress);
+//                mAudioHelper.setPersonalPitch(progress);
+                mAudioHelper.onPause();
+                process(mRecordFilePath, getPitchOutPath(), 0.5f, 0.9f);
             }
 
             @Override
@@ -251,11 +278,14 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
             @Override
             public void onModified(float progress) {
                 // fix background audio volume
+                mBackgroundVolume = progress / 200;
+                mAudioHelper.setBackgroundVolume(mBackgroundVolume);
             }
 
             @Override
             public void onModifying(float progress) {
-
+                mBackgroundVolume = progress / 200;
+                mAudioHelper.setBackgroundVolume(mBackgroundVolume);
             }
         });
 
@@ -282,6 +312,124 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
 
             }
         });
+    }
+
+    private String getPitchOutPath() {
+        return getExternalFilesDir("temp").getAbsolutePath() + "/pitchFile.pcm";
+    }
+
+    /// Helper class that will execute the SoundTouch processing. As the processing may take
+    /// some time, run it in background thread to avoid hanging of the UI.
+    protected class ProcessTask extends AsyncTask<DubbingPreviewActivity.ProcessTask.Parameters, String, Long> {
+        /// Helper class to store the SoundTouch file processing parameters
+        public final class Parameters {
+            String inFileName;
+            String outFileName;
+            float tempo;
+            float pitch;
+        }
+
+
+        /// Function that does the SoundTouch processing
+        public final long doSoundTouchProcessing(DubbingPreviewActivity.ProcessTask.Parameters params) {
+
+            SoundTouch st = new SoundTouch();
+            st.setTempo(params.tempo);
+            st.setPitchSemiTones(params.pitch);
+            Log.i("SoundTouch", "process file " + params.inFileName);
+            long startTime = System.currentTimeMillis();
+            int res = st.processFile(params.inFileName, params.outFileName);
+            long endTime = System.currentTimeMillis();
+            float duration = (endTime - startTime) * 0.001f;
+
+            Log.i("SoundTouch", "process file done, duration = " + duration);
+//            appendToConsole("Processing done, duration " + duration + " sec.");
+            publishProgress("Processing done, duration " + duration + " sec.");
+
+            if (res != 0) {
+                String err = SoundTouch.getErrorString();
+//                appendToConsole("Failure: " + err);
+                publishProgress("Failure: " + err);
+                return -1L;
+            }
+
+            // Play file if so is desirable
+
+            return 0L;
+        }
+
+
+        /// Overloaded function that get called by the system to perform the background processing
+        @Override
+        protected Long doInBackground(DubbingPreviewActivity.ProcessTask.Parameters... aparams) {
+            return doSoundTouchProcessing(aparams[0]);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+//            mAlertDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(Long aLong) {
+            super.onPostExecute(aLong);
+//            mAlertDialog.dismiss();
+//            mAlertDialog.cancel();
+            mAudioHelper.playCombineAudio(getPitchOutPath(), mBackgroundFilePath[0],
+                    mPersonalVolume, mBackgroundVolume);
+        }
+    }
+
+
+    /// process a file with SoundTouch. Do the processing using a background processing
+    /// task to avoid hanging of the UI
+    protected void process(String in, String out, float tempo, float pitch) {
+        try {
+            DubbingPreviewActivity.ProcessTask task = new DubbingPreviewActivity.ProcessTask();
+            DubbingPreviewActivity.ProcessTask.Parameters params = task.new Parameters();
+            // parse processing parameters
+            params.inFileName = in;
+            params.outFileName = out;
+            params.tempo = tempo;
+            params.pitch = pitch;
+
+            // update UI about status
+            appendToConsole("Process audio file :" + params.inFileName + " => " + params.outFileName);
+            appendToConsole("Tempo = " + params.tempo);
+            appendToConsole("Pitch adjust = " + params.pitch);
+
+            Toast.makeText(this, "Starting to process file " + params.inFileName + "...", Toast.LENGTH_SHORT).show();
+
+            // start SoundTouch processing in a background thread
+            task.execute(params);
+//			task.doSoundTouchProcessing(params);	// this would run processing in main thread
+
+        } catch (Exception exp) {
+            exp.printStackTrace();
+        }
+
+    }
+
+    private AlertDialog mAlertDialog;
+    private StringBuilder mConsoleText = new StringBuilder();
+
+    private void appendToConsole(final String message) {
+        // run on UI thread to avoid conflicts
+        mConsoleText.append(message);
+        mConsoleText.append("\n");
+//        if (mAlertDialog !=null ) {
+//            mAlertDialog.dismiss();
+//            mAlertDialog.cancel();
+//            mAlertDialog = null;
+//        }
+//        mAlertDialog = new AlertDialog.Builder(this)
+//                .setMessage(mConsoleText.toString())
+//                .create();
+//        mAlertDialog.show();
+
+        Log.e("ddd", mConsoleText.toString());
+
     }
 
 }

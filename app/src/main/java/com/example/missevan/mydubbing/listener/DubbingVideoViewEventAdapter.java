@@ -83,6 +83,11 @@ public class DubbingVideoViewEventAdapter implements DubbingVideoView.OnEventLis
     }
 
     @Override
+    public void onWhiteVideoStop() {
+
+    }
+
+    @Override
     public void reset(boolean keepStatus) {
 
     }
