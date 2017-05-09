@@ -30,11 +30,11 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
     private static final int BACKGROUND_COLOR = 0xff282020;
     private static final int START_COLOR = 0xffb23939;
     private static final int END_COLOR = 0xffad4545;
-    private static final int DEFAULT_PROGRESS = 50;
+    private static final int DEFAULT_PROGRESS = 100;
     private static final int DEFAULT_TEXT_SIZE = 8;
     private static final int DEFAULT_TEXT_COLOR = 0xffbdbdbd;
     private static final int DEFAULT_PROGRESS_TEXT = 100;
-    private static final int DEFAULT_MAX_PROGRESS = 200;
+    public static final int DEFAULT_MAX_PROGRESS = 200;
     private static final String DEFAULT_MAX_TEXT = "MAX";
     private static final String DEFAULT_MIN_TEXT = "MIN";
 
@@ -176,7 +176,7 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
 
     @Override
     public void onProgress(float progress) {
-        mModifierProgress = (int) progress * DEFAULT_MAX_PROGRESS / 100;
+        mModifierProgress = (int) progress;
         mModifierProgressTv.setText(String.valueOf(mModifierProgress));
         requestLayout();
         if (mOnModifierListener != null) {

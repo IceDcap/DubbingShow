@@ -38,6 +38,7 @@ import android.support.v4.view.ViewCompat;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
@@ -83,7 +84,7 @@ public class ArcProgressStackView extends View {
     private final static int DEFAULT_ACTION_MOVE_ANIMATION_DURATION = 150;
 
     // Max and min progress values
-    private final static float MAX_PROGRESS = 100.0F;
+    private final static float MAX_PROGRESS = 200.0F;
     private final static float MIN_PROGRESS = 0.0F;
 
     // Max and min fraction values
@@ -737,7 +738,9 @@ public class ArcProgressStackView extends View {
     }
 
     private float handleActionMoveModel(final MotionEvent event) {
-        if (mActionMoveModelIndex == DISABLE_ANIMATE_INDEX) return 0;
+        if (mActionMoveModelIndex == DISABLE_ANIMATE_INDEX) {
+            return -1;
+        }
 
         // Get current move angle
         float currentAngle = getActionMoveAngle(event.getX(), event.getY());
@@ -776,6 +779,8 @@ public class ArcProgressStackView extends View {
 
         // Set model progress and invalidate
         float touchProgress = Math.round(MAX_PROGRESS / mSweepAngle * currentAngle);
+        touchProgress = touchProgress < 0 ? 0 : touchProgress;
+        touchProgress = touchProgress > MAX_PROGRESS ? MAX_PROGRESS : touchProgress;
         model.setProgress(touchProgress);
         if (mListeners.size() > 0) {
             for (OnDragProgressListener listener : mListeners) {
@@ -833,7 +838,7 @@ public class ArcProgressStackView extends View {
                 mIsActionMoved = false;
                 if (mListeners.size() > 0) {
                     for (OnDragProgressListener listener : mListeners) {
-                        listener.onModified(handleActionMoveModel(event));
+                        listener.onModified(mModels.get(0).getProgress()/*handleActionMoveModel(event)*/);
                     }
                 }
                 break;

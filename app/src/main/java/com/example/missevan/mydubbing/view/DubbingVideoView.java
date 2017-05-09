@@ -44,6 +44,7 @@ public class DubbingVideoView extends FrameLayout implements
     public static final int MODE_DUBBING = 0x2;
     public static final int MODE_PREVIEW = 0x1;
     public static final int MODE_REVIEW = 0x3;
+    public static final int MODE_FINALLY_REVIEW = 0x4;
 
     public static int POSITION_COOPERA_ACCEPTER = 0x2;
     public static int POSITION_COOPERA_INVITER = 0x1;
@@ -230,6 +231,9 @@ public class DubbingVideoView extends FrameLayout implements
                 if (null != audioMedia) {
                     audioMedia.pause();
                 }
+                break;
+            case MODE_FINALLY_REVIEW:
+                stopReview();
                 if (getContext() instanceof DubbingPreviewActivity && null != onEventListener) {
                     onEventListener.onWhiteVideoStop();
                 }
@@ -239,11 +243,17 @@ public class DubbingVideoView extends FrameLayout implements
         mHandler.removeMessages(SHOW_PROGRESS);
     }
 
+    public void stop() {
+        reset(true);
+        mIsPlaying = false;
+        mHandler.removeMessages(SHOW_PROGRESS);
+    }
+
     public void pauseDubbing() {
         mode = MODE_DUBBING;
     }
 
-    private void play() {
+    public void play() {
         play(mode);
     }
 
@@ -276,7 +286,7 @@ public class DubbingVideoView extends FrameLayout implements
                     return false;
                 }
             });
-        } else if (mode == MODE_REVIEW) {
+        } else if (mode == MODE_REVIEW || mode == MODE_FINALLY_REVIEW) {
             // TODO: 2017/4/27 play dubbinged audio and video
             mIjkVideoView.deselectTrack(mIjkVideoView.getSelectedTrack(ITrackInfo.MEDIA_TRACK_TYPE_AUDIO));
             isPlaySourceAudio = false;
@@ -292,7 +302,7 @@ public class DubbingVideoView extends FrameLayout implements
     }
 
     public void onResume() {
-        if (mIjkVideoView.getCurrentPosition() >0 ) return;
+        if (mIjkVideoView.getCurrentPosition() > 0 ) return;
         // should show preview thumbnail on DubbingVideoView
         mThumb.setImageBitmap(MediaUtil.getThumbnail(mContext, 0/*maybe change*/, mVideoPath));
         mThumb.setVisibility(VISIBLE);
@@ -377,6 +387,11 @@ public class DubbingVideoView extends FrameLayout implements
 
     }
 
+    public void setStackThumb(long time) {
+        mThumb.setImageBitmap(MediaUtil.getThumbnail(mContext, time, mVideoPath));
+        mThumb.setVisibility(VISIBLE);
+    }
+
     public boolean isPlaying() {
         return mIjkVideoView.isPlaying();
     }
@@ -398,10 +413,11 @@ public class DubbingVideoView extends FrameLayout implements
      * stop dubbing
      */
     public void stopDubbing() {
+        if (isPlaying()){
+            mIjkVideoView.pause();
+        }
         mDubbingLength = mIjkVideoView.getCurrentPosition();
         mode = MODE_PREVIEW;
-        //todo stop dubbing
-        mIjkVideoView.pause();
         mPlay.setVisibility(VISIBLE);
         mHandler.removeMessages(SHOW_PROGRESS);
     }
@@ -436,6 +452,7 @@ public class DubbingVideoView extends FrameLayout implements
         if (null != audioMedia) {
             audioMedia.pause();
         }
+        reset(true);
         mIsPlaying = false;
         mHandler.removeMessages(SHOW_PROGRESS);
         mPlay.setVisibility(VISIBLE);
@@ -478,8 +495,9 @@ public class DubbingVideoView extends FrameLayout implements
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.videoView:
-                if (mode != MODE_DUBBING)
+                if (mode != MODE_DUBBING) {
                     pause();
+                }
                 break;
             case R.id.play:
                 play();

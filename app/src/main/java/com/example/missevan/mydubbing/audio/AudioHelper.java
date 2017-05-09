@@ -15,12 +15,16 @@ import android.util.Log;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -61,6 +65,7 @@ public class AudioHelper {
 
     private OnAudioRecordPlaybackListener mListener;
     private MediaPlayer mMediaPlayer; // use for play background audio (mp3)
+    private MediaPlayer mWaveMediaPlayer; // use for play background audio (wav)
     private AudioTrack mAudioTrack; // use for play personal audio (pcm)
 
     public AudioHelper(Context context) {
@@ -239,7 +244,9 @@ public class AudioHelper {
 
         if (!mShouldContinue || mSamples.position() >= limit) {
             mShouldContinue = false;
-            mAudioTrack.release();
+            if (mAudioTrack != null) {
+                mAudioTrack.release();
+            }
             mAudioTrack = null;
         }
 
@@ -249,6 +256,8 @@ public class AudioHelper {
     private void playAudio(File file, float volume) {
         if (file.getAbsolutePath().endsWith("mp3")) {
             playMp3(file.getAbsolutePath(), volume);
+        } else if (file.getAbsolutePath().endsWith("wav")){
+            playWave(file.getAbsolutePath(), volume);
         } else {
             playPCMAudio(file, volume);
         }
@@ -297,7 +306,50 @@ public class AudioHelper {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
+    private void playWave(String path, final float volume) {
+        if (mWaveMediaPlayer == null) {
+            mWaveMediaPlayer = new MediaPlayer();
+        }
+        try {
+            mWaveMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    if (volume >= 0 && volume <= 1) {
+                        mp.setVolume(volume, volume);
+                    }
+                    mp.start();
+                }
+            });
+
+            mWaveMediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                @Override
+                public boolean onError(MediaPlayer mp, int what, int extra) {
+                    Log.e(LOG_TAG, "Media Player onError");
+                    return false;
+                }
+            });
+
+            mWaveMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    mp.release();
+                    mWaveMediaPlayer = null;
+                }
+            });
+
+            FileDescriptor fd = null;
+            FileInputStream fis = new FileInputStream(path);
+            fd = fis.getFD();
+            if (fd != null) {
+                mWaveMediaPlayer.setDataSource(fd);
+                mWaveMediaPlayer.prepare();
+//                mediaPlayer.start();
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void stopMediaPlayer() {
@@ -305,6 +357,14 @@ public class AudioHelper {
             mMediaPlayer.stop();
             mMediaPlayer.release();
             mMediaPlayer = null;
+        }
+    }
+
+    private void stopWaveMediaPlayer() {
+        if (mWaveMediaPlayer != null && mWaveMediaPlayer.isPlaying()) {
+            mWaveMediaPlayer.stop();
+            mWaveMediaPlayer.release();
+            mWaveMediaPlayer = null;
         }
     }
 
@@ -328,26 +388,9 @@ public class AudioHelper {
     }
 
     public void setPersonalVolume(float gain) {
-        if (mAudioTrack != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mAudioTrack.setVolume(gain);
-            } else {
-                mAudioTrack.setStereoVolume(gain, gain);
-            }
-        }
-    }
-
-    /** pitch */
-    public void setPersonalPitch(float progress) {
-        if (mAudioTrack != null) {
-            final int min = 1;
-            final int max = 2 * AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_MUSIC);
-
-            int sampleRateInHz = (int) ((progress - 50) / 100f * SAMPLE_RATE + mAudioTrack.getSampleRate());
-            if (sampleRateInHz >= min && sampleRateInHz <= max) {
-                Log.e("ddd", "sampleRateInHz = " + sampleRateInHz);
-                mAudioTrack.setPlaybackRate(sampleRateInHz);
-            }
+        // personal audio play by mWaveMediaPlayer
+        if (mWaveMediaPlayer != null) {
+            mWaveMediaPlayer.setVolume(gain, gain);
         }
     }
 
@@ -434,8 +477,10 @@ public class AudioHelper {
         mExecutorService.execute(backgroundAudio);
     }
 
+    /** stop personal & background audio if playing */
     public void stopCombineAudio() {
-        mShouldContinue = false;
+        stopMediaPlayer();
+        stopWaveMediaPlayer();
     }
 
 
@@ -446,6 +491,9 @@ public class AudioHelper {
         return null;
     }
 
+    public File getRecordFile() {
+        return mFile;
+    }
 
     //Conversion of short to byte
     private byte[] short2byte(short[] sData) {
@@ -506,6 +554,33 @@ public class AudioHelper {
         return 0;
     }
 
+    /** Convert raw data to wave file */
+    public void rawToWaveFile(final File rawFile, final File waveFile) throws IOException {
+        DataOutputStream output = null;
+        InputStream is  = null;
+        byte[] bytes = new byte[(int)rawFile.length()];
+        final short numChannels = 1;
+        final short bitsPerSample = 16;
+        try {
+            output = new DataOutputStream(new FileOutputStream(waveFile));
+            WaveHeader waveHeader = new WaveHeader(WaveHeader.FORMAT_PCM, numChannels,
+                    SAMPLE_RATE, bitsPerSample, bytes.length);
+            waveHeader.write(output);
+
+            is = new DataInputStream(new FileInputStream(rawFile));
+            byte[] buffer = new byte[1024];
+            int len = 0;
+            while ((len = is.read(buffer)) > 0) {
+                output.write(buffer, 0, len);
+                output.flush();
+            }
+        } finally {
+            if (output != null) {
+                output.close();
+            }
+        }
+    }
+
     public interface OnAudioRecordPlaybackListener {
 
         void onAudioDataReceived(long duration, long bytesRead);
@@ -541,5 +616,6 @@ public class AudioHelper {
         stopPlay();
         stopCombineAudio();
         stopMediaPlayer();
+        stopWaveMediaPlayer();
     }
 }

@@ -40,6 +40,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.missevan.mydubbing.view.DubbingVideoView.MODE_DUBBING;
+
 public class MainActivity extends AppCompatActivity implements DubbingVideoView.OnEventListener,
         AudioHelper.OnAudioRecordPlaybackListener {
     private static final int MATERIAL = 1;
@@ -94,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     private long mRecordedDuration;
     private long mWroteAccessFilePointer;
     private boolean isRecording;
+    private long mHadRecordTime;
     private MediaPlayer mMediaPlayer;
     private CountDownTimer mCountDownTimer; // review by count down timer
     private long MAX_DURATION = 0;
@@ -116,8 +119,8 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         super.onCreate(savedInstanceState);
         setScreenWidth();
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+//                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.dubbing);
@@ -146,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         if (mDubbingVideoView != null) {
             mDubbingVideoView.onResume();
         }
-        hideNavigationBar();
+//        hideNavigationBar();
     }
 
     @Override
@@ -235,50 +238,64 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mCompleteBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: 2017/4/28 COMPLETE DUBBING AND SEND SERVICES TO ENCODING
-                final AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
-                        .setMessage("正在处理中....")
-                        .create();
-
-                dialog.cancel();
-
-                new AsyncTask<Void, Void, Void>() {
-                    String record;
-                    String video;
-                    String[] background;
-
-                    @Override
-                    protected void onPreExecute() {
-                        dialog.show();
-                    }
-
-                    @Override
-                    protected Void doInBackground(Void... params) {
-                        record = mAudioHelper.getRecordFilePath();
-                        video = processMaterialMp4FromAssets();
-                        background = processMaterialMp3FromAssets();
-                        return null;
-                    }
-
-                    @Override
-                    protected void onPostExecute(Void aVoid) {
-                        dialog.cancel();
-                        DubbingPreviewActivity.launch(MainActivity.this,
-                                record,
-                                video,
-                                background);
-                    }
-                }.execute();
+                processCompleteArtInNewActivity();
             }
         });
     }
 
     private void hideNavigationBar() {
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
+    private void processCompleteArtInNewActivity() {
+        final AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+                .setMessage("正在处理中....")
+                .create();
+
+        dialog.cancel();
+
+        new AsyncTask<Void, Void, Void>() {
+            String record;
+            String video;
+            String[] background;
+
+            @Override
+            protected void onPreExecute() {
+                dialog.show();
+            }
+
+            @Override
+            protected Void doInBackground(Void... params) {
+//                        record = mAudioHelper.getRecordFilePath();
+                File wave = new File(getExternalFilesDir(null), "tmp.wav");
+                record = wave.getAbsolutePath();
+                video = processMaterialMp4FromAssets();
+                background = processMaterialMp3FromAssets();
+                // pcm -> wav
+                if (mAudioHelper.getRecordFile() != null) {
+                    try {
+                        mAudioHelper.rawToWaveFile(mAudioHelper.getRecordFile(), wave);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                dialog.cancel();
+                DubbingPreviewActivity.launch(MainActivity.this,
+                        record,
+                        video,
+                        background);
+            }
+        }.execute();
+    }
 
     private String processMaterialMp4FromAssets() {
         File dir = getExternalFilesDir("material");
@@ -374,12 +391,15 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
             mCompleteBtn.setVisibility(View.GONE);
             toggleWaitingIndicator();
         } else {
-            mDubbingVideoView.stopDubbing();
-            //fixme: pause record audio here!!!
-            mAudioHelper.stopRecord();
+            if (mDubbingVideoView.isPlaying()) {
+                mAudioHelper.stopRecord();
 //            mRecordTime = mAudioHelper.getHadRecordTime();
-            //fixme:  show wave bar
+                //fixme:  show wave bar
 //            mWaveformView.setVisibility(View.VISIBLE);
+            }else {
+                collapseWaitingIndicator();
+            }
+            mDubbingVideoView.stopDubbing();
             mAction.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.dubbing_btn_record));
             isRecording = false;
         }
@@ -436,7 +456,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
             mDubbingSubtitleView.processTime((int) playTime);
         }
         int i = (int) (100L * playTime / totalTime);
-        if (videoMode == DubbingVideoView.MODE_DUBBING) {
+        if (videoMode == MODE_DUBBING) {
             mProgressBar.setProgress(i);
             return;
         }
@@ -453,34 +473,52 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mAction.setEnabled(true);
     }
 
+    private void resetLastUiState(long time) {
+        int progress = (int) (100L * time / mDuration);
+        mProgressBar.setProgress(progress);
+        mProgressBar.setSecondaryProgress(progress);
+        if (mVideoTime != null) {
+            mVideoTime.setText(MediaUtil.generateTime(time, mDuration));
+        }
+        mDubbingSubtitleView.refresh((int) time);
+        mAction.setEnabled(true);
+        mDubbingVideoView.setStackThumb(time);
+    }
+
     /**
      * TOGGLE WAITING INDICATOR
      */
     private void toggleWaitingIndicator() {
+        mAction.setImageDrawable(ContextCompat.getDrawable(MainActivity.this,
+                R.drawable.dubbing_button_horizontal_stop));
         mWaitingNum.post(mWaitingTask);
+    }
+
+    private void collapseWaitingIndicator() {
+        mWaitingNum.setVisibility(View.GONE);
     }
 
     private Runnable mWaitingTask = new Runnable() {
         @Override
         public void run() {
-            if (mWaitingNumber < 1) {
-                mWaitingNumber = 3;
-                mWaitingNum.setVisibility(View.GONE);
-                mWaveformView.setVisibility(View.INVISIBLE);
-                mDubbingVideoView.startDubbing();
-                //fixme start record audio here!!!
-                //todo: the variable 'mRecordedDuration' should change by wave bar
-                long pointer = mAudioHelper.duration2accessFilePointer(mRecordedDuration);
-                mAudioHelper.startRecord(mWroteAccessFilePointer);
-                mAction.setImageDrawable(ContextCompat.getDrawable(MainActivity.this,
-                        R.drawable.dubbing_button_horizontal_stop));
-                isRecording = true;
-            } else {
-                mWaitingNum.setVisibility(View.VISIBLE);
-                mDubbingVideoView.setDisabled(true);
-                mWaitingNum.setText(String.valueOf(mWaitingNumber));
-                mWaitingNum.postDelayed(mWaitingTask, 1000);
-                mWaitingNumber--;
+            if (isDubbing) {
+                if (mWaitingNumber < 1) {
+                    mWaitingNumber = 3;
+                    mWaitingNum.setVisibility(View.GONE);
+                    mWaveformView.setVisibility(View.INVISIBLE);
+                    mDubbingVideoView.startDubbing();
+                    //fixme start record audio here!!!
+                    //todo: the variable 'mRecordedDuration' should change by wave bar
+                    long pointer = mAudioHelper.duration2accessFilePointer(mRecordedDuration);
+                    mAudioHelper.startRecord(mWroteAccessFilePointer);
+                    isRecording = true;
+                } else {
+                    mWaitingNum.setVisibility(View.VISIBLE);
+                    mDubbingVideoView.setDisabled(true);
+                    mWaitingNum.setText(String.valueOf(mWaitingNumber));
+                    mWaitingNum.postDelayed(mWaitingTask, 1000);
+                    mWaitingNumber--;
+                }
             }
         }
     };
@@ -529,6 +567,9 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
 //            // TODO: 2017/4/27 WAVE RECORDER SHOULD UPDATE
 //        }
         refreshTime(playTime, totalTime, videoMode);
+        if (videoMode == MODE_DUBBING) {
+            mHadRecordTime = playTime;
+        }
         return true;
     }
 
@@ -567,13 +608,13 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     public void onVideoCompletion() {
         resetPreviewUI();
         final int mode = mDubbingVideoView.getMode();
-        if (mode == DubbingVideoView.MODE_DUBBING) {
+        if (mode == MODE_DUBBING) {
             mCompleteBtn.setVisibility(View.VISIBLE);
             isDubbing = false;
             dubbing();
-//            mRecordTime = 0;
+            processCompleteArtInNewActivity();
         } else if (mode == DubbingVideoView.MODE_PREVIEW) {
-
+            resetLastUiState(mHadRecordTime);
         } else {
             onTryListenClick();
         }
@@ -631,7 +672,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mProgressBar.setSecondaryProgress(0);
 
         refreshTime(resetTime, mDuration, (mDuration - resetTime) > 1000 ?
-                DubbingVideoView.MODE_DUBBING : DubbingVideoView.MODE_REVIEW);
+                MODE_DUBBING : DubbingVideoView.MODE_REVIEW);
         isReviewing = false;
     }
 
@@ -648,12 +689,10 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     public void onAudioDataReceived(long duration, long bytesRead) {
         mRecordedDuration = duration;
         mWroteAccessFilePointer = bytesRead;
-        Log.e("ddd", "mRecordedDuration = " + mRecordedDuration + "\tmWroteAccessFilePointer = " + mWroteAccessFilePointer);
     }
 
     @Override
     public void onProgress(int pos) {
-        Log.e("ddd", "record pos >> " + pos);
     }
 
     @Override
