@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     app:rcMax="100"
     app:rcSecondaryProgress="100"
-    app:rcProgress="50"
+    app:rcProgress="0"
     app:rcBackgroundPadding="3dp"
     app:rcRadius="14dp">
 

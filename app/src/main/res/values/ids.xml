@@ -3,4 +3,14 @@
     <item name="mix_voice_progress_bar" type="id"/>
     <item name="space_progress_bar" type="id"/>
     <item name="echo_progress_bar" type="id"/>
+
+    <item name="p_mix_voice_progress_bar" type="id"/>
+    <item name="p_space_progress_bar" type="id"/>
+    <item name="p_echo_progress_bar" type="id"/>
+
+    <item name="b_mix_voice_progress_bar" type="id"/>
+    <item name="b_space_progress_bar" type="id"/>
+    <item name="b_echo_progress_bar" type="id"/>
+
+    <item name="upload_dubbing_root_view" type="id"/>
 </resources>

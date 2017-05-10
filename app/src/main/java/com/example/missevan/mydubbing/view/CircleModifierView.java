@@ -2,10 +2,11 @@ package com.example.missevan.mydubbing.view;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -45,6 +46,8 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
     private ArcProgressStackView mStackView;
     private TextView mModifierTitleTv;
     private TextView mModifierProgressTv;
+    private TextView mMaxTv;
+    private TextView mMinTv;
     private View mContentView;
 
     private int mSize;
@@ -81,6 +84,16 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
     }
 
     private void init(Context context, AttributeSet attributeSet, int defStyleAttr) {
+        TypedArray typedArray = context.obtainStyledAttributes(attributeSet, R.styleable.ArcProgressStackView, defStyleAttr, 0);
+        mMaxText = typedArray.getString(R.styleable.ArcProgressStackView_modifier_max_text);
+        if (TextUtils.isEmpty(mMaxText)) {
+            mMaxText = DEFAULT_MAX_TEXT;
+        }
+        mMinText = typedArray.getString(R.styleable.ArcProgressStackView_modifier_min_text);
+        if (TextUtils.isEmpty(mMinText)) {
+            mMinText = DEFAULT_MIN_TEXT;
+        }
+        typedArray.recycle();
         final ArcProgressStackView.Model model = new ArcProgressStackView.Model("", DEFAULT_PROGRESS,
                 BACKGROUND_COLOR, new int[]{END_COLOR, START_COLOR});
         mModels.add(model);
@@ -127,6 +140,7 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 Gravity.CENTER);
         addView(mContentView, contentlp);
+        mContentView.setOnTouchListener(mStackView);
     }
 
     @Override
@@ -155,6 +169,10 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
     public void setModifierTitle(String modifierTitle) {
         mModifierTitleTv.setText(modifierTitle);
         requestLayout();
+    }
+
+    public void setBottomText(String max, String min) {
+
     }
 
     public int getModifierProgress() {

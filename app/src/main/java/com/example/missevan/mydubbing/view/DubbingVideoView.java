@@ -302,10 +302,11 @@ public class DubbingVideoView extends FrameLayout implements
     }
 
     public void onResume() {
-        if (mIjkVideoView.getCurrentPosition() > 0 ) return;
+//        if (mIjkVideoView.getCurrentPosition() > 0 ) return;
         // should show preview thumbnail on DubbingVideoView
         mThumb.setImageBitmap(MediaUtil.getThumbnail(mContext, 0/*maybe change*/, mVideoPath));
         mThumb.setVisibility(VISIBLE);
+        seekTo(0);
     }
 
     public void onPause() {

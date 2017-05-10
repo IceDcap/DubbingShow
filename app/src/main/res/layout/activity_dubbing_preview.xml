@@ -78,15 +78,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="200.0dp"/>
             <!--<tv.danmaku.ijk.media.IjkVideoView-->
-                <!--android:id="@+id/videoView"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="200dp"/>-->
+            <!--android:id="@+id/videoView"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="200dp"/>-->
             <!--<ImageView-->
-                <!--android:id="@+id/play"-->
-                <!--android:layout_gravity="center"-->
-                <!--android:src="@drawable/ds_all_button_play"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"/>-->
+            <!--android:id="@+id/play"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:src="@drawable/ds_all_button_play"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"/>-->
 
             <ProgressBar
                 android:id="@+id/progress"
@@ -98,6 +98,13 @@
                 android:maxHeight="2.0dp"
                 android:minHeight="2.0dp"
                 android:progressDrawable="@drawable/dubbing_progressbar3"/>
+
+            <com.example.missevan.mydubbing.view.PreviewSubtitleView
+                android:id="@+id/preview_subtitle_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginBottom="16dp"/>
 
         </FrameLayout>
 
@@ -159,10 +166,12 @@
                 <include
                     android:id="@+id/personal_volume_modifier"
                     layout="@layout/volume_modifier"/>
+
                 <include
                     android:id="@+id/personal_pitch_voice_modifier"
-                    layout="@layout/volume_modifier"
+                    layout="@layout/pitch_modifier"
                     android:visibility="gone"/>
+
                 <include
                     android:id="@+id/personal_control_voice_modifier"
                     layout="@layout/control_voice_modifier"
@@ -186,6 +195,7 @@
                 <include
                     android:id="@+id/background_volume_modifier"
                     layout="@layout/volume_modifier"/>
+
                 <include
                     android:id="@+id/background_control_voice_modifier"
                     layout="@layout/control_voice_modifier"
@@ -249,8 +259,8 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:orientation="horizontal"
                 android:gravity="center"
+                android:orientation="horizontal"
                 android:paddingLeft="20dp"
                 android:paddingRight="20dp">
 
@@ -265,10 +275,10 @@
 
                 <RadioButton
                     android:id="@+id/background_control_voice_menu"
-                    android:layout_marginLeft="43dp"
                     android:layout_width="30dp"
                     android:layout_height="30dp"
                     android:layout_gravity="center"
+                    android:layout_marginLeft="43dp"
                     android:background="@drawable/icon_control_voice"
                     android:button="@null"/>
 

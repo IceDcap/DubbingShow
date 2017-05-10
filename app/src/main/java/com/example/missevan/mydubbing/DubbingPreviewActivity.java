@@ -11,23 +11,35 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.RadioGroup;
-import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.example.missevan.mydubbing.audio.AudioHelper;
 import net.surina.soundtouch.SoundTouch;
+
+import com.example.missevan.mydubbing.entity.SRTEntity;
 import com.example.missevan.mydubbing.listener.DubbingVideoViewEventAdapter;
 import com.example.missevan.mydubbing.utils.MediaUtil;
 import com.example.missevan.mydubbing.view.CircleModifierView;
 import com.example.missevan.mydubbing.view.DubbingVideoView;
+import com.example.missevan.mydubbing.view.PreviewSubtitleView;
 import com.example.missevan.mydubbing.view.UprightModifierView;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.example.missevan.mydubbing.view.CircleModifierView.DEFAULT_MAX_PROGRESS;
 import static com.example.missevan.mydubbing.view.DubbingVideoView.MODE_FINALLY_REVIEW;
+
 /**
  * Created by dsq on 2017/5/5.
+ * The dubbing audio process page
+ * The audio process function include:
+ * 1. personal & background audio volume gain
+ * 2. personal audio pitch
+ * 3. personal & background audio mix process
+ * 4. personal & background audio room size process
+ * 5. personal & background audio echo process
  */
 public class DubbingPreviewActivity extends Activity implements View.OnClickListener, AudioHelper.OnAudioRecordPlaybackListener {
     private static final String LOG_TAG = "DubbingPreviewActivity";
@@ -35,10 +47,12 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     private static final String EXTRA_PITCH_FILE_PATH_KEY = "extra-pitch-file-path-key";
     private static final String EXTRA_VIDEO_FILE_PATH_KEY = "extra-video-file-path-key";
     private static final String EXTRA_BACKGROUND_FILE_PATH_KEY = "extra-background-file-path-key";
+    private static final String EXTRA_SRT_SUBTITLE_KEY = "extra-srt-subtitle-key";
 
     private String mRecordFilePath;
     private String mVideoFilePath;
     private String[] mBackgroundFilePath;
+    private List<SRTEntity> mSRTEntities;
     private long mDuration;
     private float mPersonalVolume = -1;
     private float mBackgroundVolume = -1;
@@ -58,12 +72,15 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     private DubbingVideoView mDubbingVideoView;
     private TextView mTime;
     private ProgressBar mProgressBar;
+    private PreviewSubtitleView mSubtitleView;
 
-    public static void launch(Activity who, String recordFile, String videoFile, String[] backgroundFiles) {
+    public static void launch(Activity who, String recordFile, String videoFile,
+                              String[] backgroundFiles, List<SRTEntity> entity) {
         Intent intent = new Intent(who, DubbingPreviewActivity.class);
         intent.putExtra(EXTRA_RECORD_FILE_PATH_KEY, recordFile);
         intent.putExtra(EXTRA_VIDEO_FILE_PATH_KEY, videoFile);
         intent.putExtra(EXTRA_BACKGROUND_FILE_PATH_KEY, backgroundFiles);
+        intent.putParcelableArrayListExtra(EXTRA_SRT_SUBTITLE_KEY, (ArrayList) entity);
         who.startActivity(intent);
     }
 
@@ -77,6 +94,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
         setContentView(R.layout.activity_dubbing_preview);
         init();
         initData();
+        initVideoView();
         setModifierProgressListener();
     }
 
@@ -136,6 +154,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
         mDubbingVideoView = (DubbingVideoView) findViewById(R.id.videoView);
         mTime = (TextView) findViewById(R.id.video_time);
         mProgressBar = (ProgressBar) findViewById(R.id.progress);
+        mSubtitleView = (PreviewSubtitleView) findViewById(R.id.preview_subtitle_text_view);
 
     }
 
@@ -144,6 +163,8 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
         mRecordFilePath = extraData.getStringExtra(EXTRA_RECORD_FILE_PATH_KEY);
         mVideoFilePath = extraData.getStringExtra(EXTRA_VIDEO_FILE_PATH_KEY);
         mBackgroundFilePath = extraData.getStringArrayExtra(EXTRA_BACKGROUND_FILE_PATH_KEY);
+        mSRTEntities = extraData.getParcelableArrayListExtra(EXTRA_SRT_SUBTITLE_KEY);
+        mSubtitleView.setSRTEntities(mSRTEntities);
         mAudioHelper = new AudioHelper(this, this);
         mAudioHelper.setFile(new File(mRecordFilePath));
     }
@@ -151,11 +172,12 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     @Override
     protected void onResume() {
         super.onResume();
-        initVideoView();
+//        initVideoView();
         /*getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);*/
+        mDubbingVideoView.onResume();
     }
 
     @Override
@@ -214,11 +236,13 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
         mTime.setText(str);
         int i = (int) (100L * playTime / totalTime);
         mProgressBar.setProgress(i);
+        mSubtitleView.processTime((int) playTime);
     }
 
     private void resetTime() {
         mTime.setText(MediaUtil.generateTime(0, mDuration));
         mProgressBar.setProgress(0);
+        mSubtitleView.reset();
     }
 
     @Override
@@ -228,7 +252,9 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
                 onBackPressed();
                 break;
             case R.id.complete:
-
+                DubbingUploadActivity.launch(this,
+                        isPitched ? getPitchOutPath() : mRecordFilePath,
+                        mVideoFilePath);
                 break;
         }
     }
@@ -302,28 +328,57 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
 
         mPersonalUprightView.setOnModifierListener(new UprightModifierView.OnModifierListener() {
             @Override
-            public void onModified(float progress) {
-
+            public void onModified(View view, float progress) {
+                switch (view.getId()) {
+                    case R.id.mix_voice_progress_bar:
+                        break;
+                    case R.id.space_progress_bar:
+                        break;
+                    case R.id.echo_progress_bar:
+                        break;
+                }
             }
 
             @Override
-            public void onModifying(float progress) {
-
+            public void onModifying(View view, float progress) {
+                switch (view.getId()) {
+                    case R.id.mix_voice_progress_bar:
+                        break;
+                    case R.id.space_progress_bar:
+                        break;
+                    case R.id.echo_progress_bar:
+                        break;
+                }
             }
         });
 
         mBackgroundUprightView.setOnModifierListener(new UprightModifierView.OnModifierListener() {
             @Override
-            public void onModified(float progress) {
-
+            public void onModified(View view, float progress) {
+                switch (view.getId()) {
+                    case R.id.mix_voice_progress_bar:
+                        break;
+                    case R.id.space_progress_bar:
+                        break;
+                    case R.id.echo_progress_bar:
+                        break;
+                }
             }
 
             @Override
-            public void onModifying(float progress) {
-
+            public void onModifying(View view, float progress) {
+                switch (view.getId()) {
+                    case R.id.mix_voice_progress_bar:
+                        break;
+                    case R.id.space_progress_bar:
+                        break;
+                    case R.id.echo_progress_bar:
+                        break;
+                }
             }
         });
     }
+
 
     private String getPitchOutPath() {
         return getExternalFilesDir("temp").getAbsolutePath() + "/pitchFile.wav";

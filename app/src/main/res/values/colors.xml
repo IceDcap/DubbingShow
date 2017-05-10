@@ -5,6 +5,7 @@
     <color name="colorAccent">#FF4081</color>
 
     <color name="black">#ff000000</color>
+    <color name="half_black">#80000000</color>
     <color name="colorWhite">#ffffffff</color>
     <color name="white">#ffffffff</color>
     <color name="waveform_selected">#ff3b6495</color>
@@ -18,6 +19,7 @@
     <color name="subtitle_edit_text_cursor">#ff902a2e</color>
 
     <color name="round_corner_progress_bar_background_default">#ff161616</color>
-    <color name="round_corner_progress_bar_progress_default">#ffb23939</color>
+    <color name="round_corner_progress_bar_progress_start_default">#ffb23939</color>
+    <color name="round_corner_progress_bar_progress_end_default">#ffae4545</color>
     <color name="round_corner_progress_bar_secondary_progress_default">#ff282020</color>
 </resources>

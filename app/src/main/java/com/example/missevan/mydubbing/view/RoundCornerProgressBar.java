@@ -9,6 +9,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -24,14 +25,15 @@ import android.widget.TextView;
 
 import com.example.missevan.mydubbing.R;
 
+import static android.graphics.drawable.GradientDrawable.LINEAR_GRADIENT;
+
 /**
  * Created by icedcap on 06/05/2017.
  */
-
 public class RoundCornerProgressBar extends LinearLayout implements ViewTreeObserver.OnGlobalLayoutListener {
 
-    protected final static int DEFAULT_MAX_PROGRESS = 100;
-    protected final static int DEFAULT_PROGRESS = 0;
+    protected final static int DEFAULT_MAX_PROGRESS = 90;
+    protected final static int DEFAULT_PROGRESS = 10;
     protected final static int DEFAULT_SECONDARY_PROGRESS = 0;
     protected final static int DEFAULT_PROGRESS_RADIUS = 30;
     protected final static int DEFAULT_BACKGROUND_PADDING = 0;
@@ -53,7 +55,8 @@ public class RoundCornerProgressBar extends LinearLayout implements ViewTreeObse
     private float secondaryProgress;
 
     private int colorBackground;
-    private int colorProgress;
+    private int colorProgressGradientStart;
+    private int colorProgressGradientEnd;
     private int colorSecondaryProgress;
 
     private boolean isReverse;
@@ -106,8 +109,8 @@ public class RoundCornerProgressBar extends LinearLayout implements ViewTreeObse
 
     // Draw a progress by sub class
     protected void drawProgress(LinearLayout layoutProgress, float max, float progress, float totalHeight,
-                                int radius, int padding, int colorProgress, boolean isReverse) {
-        GradientDrawable backgroundDrawable = createGradientDrawable(colorProgress);
+                                int radius, int padding, int colorProgress, int colorProgress2,  boolean isReverse) {
+        GradientDrawable backgroundDrawable = createGradientDrawable(new int[] {colorProgress, colorProgress2});
         int newRadius = radius - (padding / 2);
         backgroundDrawable.setCornerRadii(new float[]{newRadius, newRadius, newRadius, newRadius, newRadius, newRadius, newRadius, newRadius});
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -116,7 +119,7 @@ public class RoundCornerProgressBar extends LinearLayout implements ViewTreeObse
             layoutProgress.setBackgroundDrawable(backgroundDrawable);
         }
 
-        float ratio = max / progress;
+        float ratio = (max + 25) / (progress + 10);
         int progressHeight = (int) ((totalHeight - mViewRoot.getPaddingTop() -
                 mViewRoot.getPaddingBottom() - (padding * 2)) / ratio);
         ViewGroup.LayoutParams progressParams = layoutProgress.getLayoutParams();
@@ -170,8 +173,10 @@ public class RoundCornerProgressBar extends LinearLayout implements ViewTreeObse
 
         int colorBackgroundDefault = context.getResources().getColor(R.color.round_corner_progress_bar_background_default);
         colorBackground = typedArray.getColor(R.styleable.RoundCornerProgress_rcBackgroundColor, colorBackgroundDefault);
-        int colorProgressDefault = context.getResources().getColor(R.color.round_corner_progress_bar_progress_default);
-        colorProgress = typedArray.getColor(R.styleable.RoundCornerProgress_rcProgressColor, colorProgressDefault);
+        int colorProgressStartDefault = context.getResources().getColor(R.color.round_corner_progress_bar_progress_start_default);
+        int colorProgressEndDefault = context.getResources().getColor(R.color.round_corner_progress_bar_progress_end_default);
+        colorProgressGradientStart = typedArray.getColor(R.styleable.RoundCornerProgress_rcProgressColorStart, colorProgressStartDefault);
+        colorProgressGradientEnd = typedArray.getColor(R.styleable.RoundCornerProgress_rcProgressColorEnd, colorProgressEndDefault);
         int colorSecondaryProgressDefault = context.getResources().getColor(R.color.round_corner_progress_bar_secondary_progress_default);
         colorSecondaryProgress = typedArray.getColor(R.styleable.RoundCornerProgress_rcSecondaryProgressColor, colorSecondaryProgressDefault);
         typedArray.recycle();
@@ -210,7 +215,7 @@ public class RoundCornerProgressBar extends LinearLayout implements ViewTreeObse
     // Draw progress background
     @SuppressWarnings("deprecation")
     private void drawBackgroundProgress() {
-        GradientDrawable backgroundDrawable = createGradientDrawable(colorBackground);
+        GradientDrawable backgroundDrawable = createGradientDrawable(new int[]{colorBackground, colorBackground});
         int newRadius = radius - (padding / 2);
         backgroundDrawable.setCornerRadii(new float[]{newRadius, newRadius, newRadius, newRadius, newRadius, newRadius, newRadius, newRadius});
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -221,19 +226,26 @@ public class RoundCornerProgressBar extends LinearLayout implements ViewTreeObse
     }
 
     // Create an empty color rectangle gradient drawable
-    protected GradientDrawable createGradientDrawable(int color) {
+    protected GradientDrawable createGradientDrawable(@ColorInt int[] color) {
         GradientDrawable gradientDrawable = new GradientDrawable();
         gradientDrawable.setShape(GradientDrawable.RECTANGLE);
-        gradientDrawable.setColor(color);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            gradientDrawable.setColors(color);
+        } else {
+            gradientDrawable.setColor(color[0]);
+        }
+        gradientDrawable.setGradientType(LINEAR_GRADIENT);
         return gradientDrawable;
     }
 
     private void drawPrimaryProgress() {
-        drawProgress(layoutProgress, max, progress, totalHeight, radius, padding, colorProgress, isReverse);
+        drawProgress(layoutProgress, max, progress, totalHeight, radius,
+                padding, colorProgressGradientStart, colorProgressGradientEnd, isReverse);
     }
 
     private void drawSecondaryProgress() {
-        drawProgress(layoutSecondaryProgress, max, secondaryProgress, totalHeight, radius, padding, colorSecondaryProgress, isReverse);
+        drawProgress(layoutSecondaryProgress, max, secondaryProgress, totalHeight, radius,
+                padding, colorSecondaryProgress, colorSecondaryProgress, isReverse);
     }
 
     private void drawProgressReverse() {
@@ -387,12 +399,13 @@ public class RoundCornerProgressBar extends LinearLayout implements ViewTreeObse
         drawBackgroundProgress();
     }
 
-    public int getProgressColor() {
-        return colorProgress;
+    public int[] getProgressColor() {
+        return new int[]{colorProgressGradientStart, colorProgressGradientEnd};
     }
 
-    public void setProgressColor(int colorProgress) {
-        this.colorProgress = colorProgress;
+    public void setProgressColor(int colorProgress, int colorProgress2) {
+        this.colorProgressGradientStart = colorProgress;
+        this.colorProgressGradientEnd = colorProgress2;
         drawPrimaryProgress();
     }
 
@@ -428,7 +441,7 @@ public class RoundCornerProgressBar extends LinearLayout implements ViewTreeObse
         ss.padding = this.padding;
 
         ss.colorBackground = this.colorBackground;
-        ss.colorProgress = this.colorProgress;
+        ss.colorProgress = this.colorProgressGradientStart;
         ss.colorSecondaryProgress = this.colorSecondaryProgress;
 
         ss.max = this.max;
@@ -453,7 +466,8 @@ public class RoundCornerProgressBar extends LinearLayout implements ViewTreeObse
         this.padding = ss.padding;
 
         this.colorBackground = ss.colorBackground;
-        this.colorProgress = ss.colorProgress;
+        this.colorProgressGradientStart = ss.colorProgress;
+        this.colorProgressGradientEnd = ss.colorProgress2;
         this.colorSecondaryProgress = ss.colorSecondaryProgress;
 
         this.max = ss.max;
@@ -478,6 +492,7 @@ public class RoundCornerProgressBar extends LinearLayout implements ViewTreeObse
 
         int colorBackground;
         int colorProgress;
+        int colorProgress2;
         int colorSecondaryProgress;
 
         boolean isReverse;

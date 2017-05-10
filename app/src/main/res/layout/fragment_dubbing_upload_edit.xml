@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="#ff1b1b1b"
+              android:orientation="vertical">
+
+    <RelativeLayout
+        android:id="@+id/tool_bar"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_alignParentTop="true"
+        android:background="#ff282828">
+
+        <TextView
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_marginLeft="10dp"
+            android:contentDescription="back"
+            android:drawablePadding="4dp"
+            android:gravity="center"
+            android:text="@string/upload_dubbing_last"
+            android:textColor="#ffbdbdbd"
+            android:textSize="15sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:text="@string/upload_dubbing_title"
+            android:textColor="#ffbdbdbd"
+            android:textSize="17sp"/>
+    </RelativeLayout>
+
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="220dp">
+
+        <ImageView
+            android:id="@+id/upload_dubbing_change_cover_btn_image_view"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_margin="10dp"
+            android:scaleType="centerCrop"
+            tools:src="#631123"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="10dp"
+            android:background="#80000000"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/upload_dubbing_change_cover"
+            android:textColor="#fff"
+            android:textSize="24sp"/>
+    </FrameLayout>
+
+
+    <LinearLayout
+        android:id="@+id/area_title_edit"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/upload_dubbing_name_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:background="#ff282828"
+                android:hint="@string/upload_dubbing_name_edit"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:textColor="#757575"
+                android:textColorHint="#757575"
+                android:textSize="15sp"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"/>
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#ff282828"
+                android:gravity="start"
+                android:hint="@string/upload_dubbing_content_edit"
+                android:padding="10dp"
+                android:textColor="#757575"
+                android:textColorHint="#757575"
+                android:textSize="15sp"/>
+
+        </LinearLayout>
+
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/upload_dubbing_confirm_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="20dp"
+                android:background="@drawable/bg_upload_dubbing_btn"
+                android:paddingBottom="10dp"
+                android:paddingLeft="70dp"
+                android:paddingRight="70dp"
+                android:paddingTop="10dp"
+                android:text="@string/upload_dubbing_confirm_upload"
+                android:textColor="#1d1c1c"
+                android:textSize="15sp"/>
+        </FrameLayout>
+
+    </LinearLayout>
+
+
+</LinearLayout>

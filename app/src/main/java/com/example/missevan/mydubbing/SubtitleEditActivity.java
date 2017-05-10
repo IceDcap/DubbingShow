@@ -34,11 +34,11 @@ public class SubtitleEditActivity extends AppCompatActivity implements View.OnCl
 
     private ArrayList<SRTEntity> mEntities;
 
-    public static void launch(Activity who, ArrayList<SRTEntity> subtitleEntityList, int resquestCode) {
+    public static void launch(Activity who, ArrayList<SRTEntity> subtitleEntityList, int requestCode) {
         Intent intent = new Intent(who, SubtitleEditActivity.class);
         intent.putParcelableArrayListExtra(EXTRA_SUBTITLE_LIST_KEY, subtitleEntityList);
 //        who.startActivity(intent);
-        who.startActivityForResult(intent, resquestCode);
+        who.startActivityForResult(intent, requestCode);
     }
 
     @Override

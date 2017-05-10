@@ -57,7 +57,7 @@ import java.util.Random;
  * Created by GIGAMOLE on 04.03.2016.
  */
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-public class ArcProgressStackView extends View {
+public class ArcProgressStackView extends View implements View.OnTouchListener{
     private List<OnDragProgressListener> mListeners = new ArrayList<>();
 
     public void registerListener(OnDragProgressListener listener) {
@@ -851,6 +851,15 @@ public class ArcProgressStackView extends View {
         return true;
     }
 
+    // touch listener from parent view
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        if (v instanceof CircleModifierView) {
+            onTouchEvent(event);
+        }
+        return true;
+    }
+
     @Override
     protected void onMeasure(final int widthMeasureSpec, final int heightMeasureSpec) {
         // Get measured sizes
@@ -1071,6 +1080,7 @@ public class ArcProgressStackView extends View {
         // Restore after drawing
         canvas.restore();
     }
+
 
     public static class Model {
 

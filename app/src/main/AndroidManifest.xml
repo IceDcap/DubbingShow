@@ -24,6 +24,7 @@
         <activity android:name=".DubbingPreviewActivity"
                   android:screenOrientation="portrait">
         </activity>
+        <activity android:name=".DubbingUploadActivity" android:screenOrientation="portrait"/>
     </application>
 
 </manifest>

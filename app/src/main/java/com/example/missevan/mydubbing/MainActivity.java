@@ -10,6 +10,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.CountDownTimer;
+import android.os.Process;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -23,6 +24,7 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.missevan.mydubbing.audio.AudioHelper;
 import com.example.missevan.mydubbing.entity.SRTEntity;
@@ -88,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     boolean isReviewing = false;
 
     // data set
-    List<SRTEntity> srtEntityList;
+    List<SRTEntity> mSrtEntityList;
     private boolean isDubbing;
 //    private long mRecordTime;
 
@@ -150,6 +152,15 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
             mDubbingVideoView.onResume();
         }
 //        hideNavigationBar();
+        if (!MediaUtil.isHasEnoughSdcardSpace(MediaUtil.getAvailableExternalMemorySize())) {
+            Toast.makeText(this, "存储空间不足！！\n5秒后退出程序", Toast.LENGTH_SHORT).show();
+            mDubbingVideoView.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    System.exit(0);
+                }
+            }, 5000);
+        }
     }
 
     @Override
@@ -181,8 +192,8 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode != Activity.RESULT_OK) return;
         if (requestCode == 0) {
-            srtEntityList = data.getParcelableArrayListExtra(SubtitleEditActivity.EXTRA_RESULT_SUBTITLE_LIST_KEY);
-            mDubbingSubtitleView.init(srtEntityList);
+            mSrtEntityList = data.getParcelableArrayListExtra(SubtitleEditActivity.EXTRA_RESULT_SUBTITLE_LIST_KEY);
+            mDubbingSubtitleView.init(mSrtEntityList);
         }
     }
 
@@ -194,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mProgressBar = (ProgressBar) findViewById(R.id.progress);
         mWaveformView = (WaveformView) findViewById(R.id.dubbingWaveform);
         mDubbingVideoView = (DubbingVideoView) findViewById(R.id.videoView);
-        new AsyncTask<Void, Void, Void>(){
+        new AsyncTask<Void, Void, Void>() {
             String video = "";
             AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
                     .setMessage("正在处理...")
@@ -246,8 +257,8 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     private void hideNavigationBar() {
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
     private void processCompleteArtInNewActivity() {
@@ -292,7 +303,8 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
                 DubbingPreviewActivity.launch(MainActivity.this,
                         record,
                         video,
-                        background);
+                        background,
+                        mSrtEntityList);
             }
         }.execute();
     }
@@ -396,7 +408,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
 //            mRecordTime = mAudioHelper.getHadRecordTime();
                 //fixme:  show wave bar
 //            mWaveformView.setVisibility(View.VISIBLE);
-            }else {
+            } else {
                 collapseWaitingIndicator();
             }
             mDubbingVideoView.stopDubbing();
@@ -416,8 +428,8 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     private void checkRoles(File material) {
         primaryRole = "";
         secondRole = "";
-        srtEntityList = SRTUtil.processSrtFromFile(this, SUBTITLE[MATERIAL]);
-        if (srtEntityList == null || srtEntityList.size() == 0) return;
+        mSrtEntityList = SRTUtil.processSrtFromFile(this, SUBTITLE[MATERIAL]);
+        if (mSrtEntityList == null || mSrtEntityList.size() == 0) return;
         mDubbingSubtitleView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -425,10 +437,10 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
                 if (mDubbingVideoView.isPlaying()) {
                     mDubbingVideoView.pause(DubbingVideoView.MODE_PREVIEW);
                 }
-                SubtitleEditActivity.launch(MainActivity.this, (ArrayList) srtEntityList, 0);
+                SubtitleEditActivity.launch(MainActivity.this, (ArrayList) mSrtEntityList, 0);
             }
         });
-        for (SRTEntity entity : srtEntityList) {
+        for (SRTEntity entity : mSrtEntityList) {
             if (TextUtils.isEmpty(primaryRole)) {
                 primaryRole = entity.getRole();
             } else if (!primaryRole.equals(entity.getRole()) && TextUtils.isEmpty(secondRole)) {
@@ -439,7 +451,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         if (!TextUtils.isEmpty(primaryRole) && !TextUtils.isEmpty(secondRole)) {
             initRoleView();
         }
-        mDubbingSubtitleView.init(srtEntityList);
+        mDubbingSubtitleView.init(mSrtEntityList);
     }
 
     private void initRoleView() {

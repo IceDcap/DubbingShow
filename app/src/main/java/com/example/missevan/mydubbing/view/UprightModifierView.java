@@ -3,6 +3,7 @@ package com.example.missevan.mydubbing.view;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
+import android.support.annotation.IdRes;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -263,11 +264,12 @@ public class UprightModifierView extends FrameLayout implements View.OnTouchList
                 break;
             case MotionEvent.ACTION_MOVE:
                 float progress = (totalHeight - touchY) / totalHeight * 100;
+                progress = progress <= 0 ? 0: progress >= 100 ? 100 : progress;
                 RoundCornerProgressBar rb = (RoundCornerProgressBar) v;
                 rb.setProgress(progress);
                 drawProgressIndicator((RoundCornerProgressBar) v);
                 if (mOnModifierListener != null) {
-                    mOnModifierListener.onModifying(progress);
+                    mOnModifierListener.onModifying(v, progress);
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -277,7 +279,9 @@ public class UprightModifierView extends FrameLayout implements View.OnTouchList
                 // Reset values
                 removeProgressIndicator((RoundCornerProgressBar) v);
                 if (mOnModifierListener != null) {
-                    mOnModifierListener.onModified((totalHeight - touchY) / totalHeight * 100);
+                    float p = (totalHeight - touchY) / totalHeight * 100;
+                    p = p <= 0 ? 0: p >= 100 ? 100 : p;
+                    mOnModifierListener.onModified(v, p);
                 }
                 break;
         }
@@ -289,13 +293,14 @@ public class UprightModifierView extends FrameLayout implements View.OnTouchList
         return true;
     }
 
+
     public void setOnModifierListener(OnModifierListener onModifierListener) {
         mOnModifierListener = onModifierListener;
     }
 
     public interface OnModifierListener {
-        void onModified(float progress);
+        void onModified(View view, float progress);
 
-        void onModifying(float progress);
+        void onModifying(View view, float progress);
     }
 }
