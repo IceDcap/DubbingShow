@@ -106,6 +106,17 @@
                 android:layout_gravity="bottom|center_horizontal"
                 android:layout_marginBottom="16dp"/>
 
+            <TextView
+                android:id="@+id/rb_video_time"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="bottom|end"
+                android:layout_marginBottom="5dp"
+                android:layout_marginRight="10dp"
+                android:text="00:00/00:00"
+                android:textColor="@color/white"
+                android:textSize="12sp"/>
         </FrameLayout>
 
 
@@ -218,6 +229,11 @@
                 android:paddingLeft="20dp"
                 android:paddingRight="20dp">
 
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
                 <RadioButton
                     android:id="@+id/personal_volume_menu"
                     android:layout_width="30dp"
@@ -245,16 +261,50 @@
                     android:layout_height="0dp"
                     android:layout_weight="1"/>
 
-                <RadioButton
-                    android:id="@+id/personal_control_voice_menu"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/icon_control_voice"
-                    android:button="@null"/>
+                <!--<Space-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_height="0dp"-->
+                <!--android:layout_weight="1"/>-->
+
+                <!--<RadioButton-->
+                <!--android:id="@+id/personal_control_voice_menu"-->
+                <!--android:layout_width="30dp"-->
+                <!--android:layout_height="30dp"-->
+                <!--android:layout_gravity="center"-->
+                <!--android:background="@drawable/icon_control_voice"-->
+                <!--android:button="@null"/>-->
             </RadioGroup>
 
-            <RadioGroup
+            <!--<RadioGroup-->
+            <!--android:id="@+id/background_menu"-->
+            <!--android:layout_width="0dp"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:layout_weight="1"-->
+            <!--android:gravity="center"-->
+            <!--android:orientation="horizontal"-->
+            <!--android:paddingLeft="20dp"-->
+            <!--android:paddingRight="20dp">-->
+
+            <!--<RadioButton-->
+            <!--android:id="@+id/background_volume_menu"-->
+            <!--android:layout_width="30dp"-->
+            <!--android:layout_height="30dp"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:background="@drawable/icon_modify_volume"-->
+            <!--android:button="@null"-->
+            <!--android:checked="true"/>-->
+
+            <!--<RadioButton-->
+            <!--android:id="@+id/background_control_voice_menu"-->
+            <!--android:layout_width="30dp"-->
+            <!--android:layout_height="30dp"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:layout_marginLeft="43dp"-->
+            <!--android:background="@drawable/icon_control_voice"-->
+            <!--android:button="@null"/>-->
+
+            <!--</RadioGroup>-->
+            <FrameLayout
                 android:id="@+id/background_menu"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -263,26 +313,13 @@
                 android:orientation="horizontal"
                 android:paddingLeft="20dp"
                 android:paddingRight="20dp">
-
-                <RadioButton
-                    android:id="@+id/background_volume_menu"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                <ImageView
                     android:layout_gravity="center"
-                    android:background="@drawable/icon_modify_volume"
-                    android:button="@null"
-                    android:checked="true"/>
-
-                <RadioButton
-                    android:id="@+id/background_control_voice_menu"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_gravity="center"
-                    android:layout_marginLeft="43dp"
-                    android:background="@drawable/icon_control_voice"
-                    android:button="@null"/>
-
-            </RadioGroup>
+                    android:id="@+id/background_volume_menu_control"
+                    android:src="@drawable/icon_background_volume"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </FrameLayout>
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>

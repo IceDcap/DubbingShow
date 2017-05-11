@@ -950,7 +950,9 @@ public class ArcProgressStackView extends View implements View.OnTouchListener{
                 }
 
                 mProgressPaint.setShader(model.mSweepGradient);
-            } else mProgressPaint.setColor(model.getColor());
+            } else {
+                mProgressPaint.setColor(model.getColor());
+            }
 
             // Here we draw main progress
             mProgressPaint.setAlpha(255);
@@ -1157,6 +1159,7 @@ public class ArcProgressStackView extends View implements View.OnTouchListener{
             return mBgColor;
         }
 
+
         public void setBgColor(final int bgColor) {
             mBgColor = bgColor;
         }
@@ -1168,6 +1171,18 @@ public class ArcProgressStackView extends View implements View.OnTouchListener{
         public void setColors(final int[] colors) {
             if (colors != null && colors.length >= 2) mColors = colors;
             else mColors = null;
+        }
+
+        public void setSweepGradient(SweepGradient sweepGradient) {
+            mSweepGradient = sweepGradient;
+        }
+
+        public RectF getBounds() {
+            return mBounds;
+        }
+
+        public Rect getTextBounds() {
+            return mTextBounds;
         }
     }
 

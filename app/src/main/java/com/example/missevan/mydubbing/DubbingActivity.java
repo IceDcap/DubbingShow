@@ -10,7 +10,6 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.CountDownTimer;
-import android.os.Process;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -18,7 +17,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
@@ -44,7 +42,7 @@ import java.util.List;
 
 import static com.example.missevan.mydubbing.view.DubbingVideoView.MODE_DUBBING;
 
-public class MainActivity extends AppCompatActivity implements DubbingVideoView.OnEventListener,
+public class DubbingActivity extends AppCompatActivity implements DubbingVideoView.OnEventListener,
         AudioHelper.OnAudioRecordPlaybackListener {
     private static final int MATERIAL = 1;
     private static final int[] SUBTITLE = new int[]{
@@ -125,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
 //                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        setContentView(R.layout.dubbing);
+        setContentView(R.layout.activity_dubbing);
         mAudioHelper = new AudioHelper(this, this);
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -207,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
         mDubbingVideoView = (DubbingVideoView) findViewById(R.id.videoView);
         new AsyncTask<Void, Void, Void>() {
             String video = "";
-            AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+            AlertDialog dialog = new AlertDialog.Builder(DubbingActivity.this)
                     .setMessage("正在处理...")
                     .create();
 
@@ -225,7 +223,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
             @Override
             protected void onPostExecute(Void aVoid) {
                 dialog.cancel();
-                mDubbingVideoView.setPara(video, "", false, 0, "", MainActivity.this, MainActivity.this);
+                mDubbingVideoView.setPara(video, "", false, 0, "", DubbingActivity.this, DubbingActivity.this);
             }
         }.execute();
 
@@ -262,7 +260,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
     }
 
     private void processCompleteArtInNewActivity() {
-        final AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+        final AlertDialog dialog = new AlertDialog.Builder(DubbingActivity.this)
                 .setMessage("正在处理中....")
                 .create();
 
@@ -300,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
             @Override
             protected void onPostExecute(Void aVoid) {
                 dialog.cancel();
-                DubbingPreviewActivity.launch(MainActivity.this,
+                DubbingPreviewActivity.launch(DubbingActivity.this,
                         record,
                         video,
                         background,
@@ -437,7 +435,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
                 if (mDubbingVideoView.isPlaying()) {
                     mDubbingVideoView.pause(DubbingVideoView.MODE_PREVIEW);
                 }
-                SubtitleEditActivity.launch(MainActivity.this, (ArrayList) mSrtEntityList, 0);
+                SubtitleEditActivity.launch(DubbingActivity.this, (ArrayList) mSrtEntityList, 0);
             }
         });
         for (SRTEntity entity : mSrtEntityList) {
@@ -501,7 +499,7 @@ public class MainActivity extends AppCompatActivity implements DubbingVideoView.
      * TOGGLE WAITING INDICATOR
      */
     private void toggleWaitingIndicator() {
-        mAction.setImageDrawable(ContextCompat.getDrawable(MainActivity.this,
+        mAction.setImageDrawable(ContextCompat.getDrawable(DubbingActivity.this,
                 R.drawable.dubbing_button_horizontal_stop));
         mWaitingNum.post(mWaitingTask);
     }

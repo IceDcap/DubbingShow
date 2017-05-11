@@ -27,7 +27,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.0'
     compile 'com.android.support:recyclerview-v7:25.3.0'
     testCompile 'junit:junit:4.12'
-//    compile 'com.android.support:recyclerview:25.+'
 
     //danmuku
 //    compile 'tv.danmaku.ijk.media:ijkplayer-java:0.7.9'
@@ -35,4 +34,5 @@ dependencies {
     compile project(path: ':ijkplayer-java')
     compile project(path: ':ijkplayer-exo')
     compile project(path: ':androidlame')
+    compile project(path: ':cropper')
 }

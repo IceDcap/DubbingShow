@@ -74,6 +74,9 @@
     <string name="upload_dubbing_name_edit">给作品起个名字吧~</string>
     <string name="upload_dubbing_content_edit">作品介绍（400字以内）</string>
     <string name="upload_dubbing_change_cover">更换封面</string>
+    <string name="upload_dubbing_take_photo">拍一张</string>
+    <string name="upload_dubbing_select_from_gallery">相册选图</string>
+    <string name="upload_dubbing_select_from_video">选取视频片段</string>
     <string name="upload_dubbing_action_success">~ 作品上传成功 ~</string>
     <string name="upload_dubbing_review_dubbing">查看作品</string>
     <string name="upload_dubbing_share_to">分享作品到</string>

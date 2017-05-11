@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -33,6 +34,7 @@ import static com.example.missevan.mydubbing.view.DubbingVideoView.MODE_FINALLY_
 
 /**
  * Created by dsq on 2017/5/5.
+ *
  * The dubbing audio process page
  * The audio process function include:
  * 1. personal & background audio volume gain
@@ -54,8 +56,8 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     private String[] mBackgroundFilePath;
     private List<SRTEntity> mSRTEntities;
     private long mDuration;
-    private float mPersonalVolume = -1;
-    private float mBackgroundVolume = -1;
+    private float mPersonalVolume = 0.5f;
+    private float mBackgroundVolume = 0.5f;
     private boolean isPitched;
     private float mPitchParam;
 
@@ -68,9 +70,11 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     private CircleModifierView mPersonalPitchCircleView;
     private CircleModifierView mBackgroundCircleView;
     private RadioGroup mPersonalRG;
-    private RadioGroup mBackgroundRG;
+//    private RadioGroup mBackgroundRG;
+    private ImageView mBackgroundRG;
     private DubbingVideoView mDubbingVideoView;
     private TextView mTime;
+    private TextView mRbTime;
     private ProgressBar mProgressBar;
     private PreviewSubtitleView mSubtitleView;
 
@@ -109,7 +113,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
 //        mPersonalPitchCircleView.setIsAnimated(false);
         mBackgroundCircleView = (CircleModifierView) findViewById(R.id.background_volume_modifier);
         mPersonalRG = (RadioGroup) findViewById(R.id.personal_menu);
-        mBackgroundRG = (RadioGroup) findViewById(R.id.background_menu);
+//        mBackgroundRG = (RadioGroup) findViewById(R.id.background_menu);
 
         mPersonalRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -126,16 +130,16 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
                         mPersonalCircleView.setVisibility(View.GONE);
                         mPersonalPitchCircleView.setVisibility(View.VISIBLE);
                         break;
-                    case R.id.personal_control_voice_menu:
-                        mPersonalCircleView.setVisibility(View.GONE);
-                        mPersonalPitchCircleView.setVisibility(View.GONE);
-                        mPersonalUprightView.setVisibility(View.VISIBLE);
-                        break;
+//                    case R.id.personal_control_voice_menu:
+//                        mPersonalCircleView.setVisibility(View.GONE);
+//                        mPersonalPitchCircleView.setVisibility(View.GONE);
+//                        mPersonalUprightView.setVisibility(View.VISIBLE);
+//                        break;
                 }
             }
         });
 
-        mBackgroundRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+       /* mBackgroundRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 switch (checkedId) {
@@ -149,10 +153,28 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
                         break;
                 }
             }
+        });*/
+        mBackgroundRG = (ImageView) findViewById(R.id.background_volume_menu_control);
+        mBackgroundRG.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final int level = mBackgroundRG.getDrawable().getLevel();
+                mBackgroundRG.setImageLevel((level + 1) % 2);
+                mBackgroundCircleView.setEnabled(level == 1);
+                if (level == 0) {
+                    mAudioHelper.setBackgroundVolume(0);
+                } else {
+                    mAudioHelper.setBackgroundVolume(mBackgroundVolume);
+                }
+                mBackgroundVolume = level == 0 ? 0 : ((float) mBackgroundCircleView.getModifierProgress()) / 200f;
+                mAudioHelper.setBackgroundVolume(mBackgroundVolume);
+            }
         });
+
 
         mDubbingVideoView = (DubbingVideoView) findViewById(R.id.videoView);
         mTime = (TextView) findViewById(R.id.video_time);
+        mRbTime = (TextView) findViewById(R.id.rb_video_time);
         mProgressBar = (ProgressBar) findViewById(R.id.progress);
         mSubtitleView = (PreviewSubtitleView) findViewById(R.id.preview_subtitle_text_view);
 
@@ -197,6 +219,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
             public void onVideoPrepared(long duration) {
                 mDuration = duration;
                 mTime.setText(MediaUtil.generateTime(0, duration));
+                mRbTime.setText(MediaUtil.generateTime(0, duration));
             }
 
             @Override
@@ -234,6 +257,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     private void refreshTime(long playTime, long totalTime) {
         String str = MediaUtil.generateTime(playTime, totalTime);
         mTime.setText(str);
+        mRbTime.setText(str);
         int i = (int) (100L * playTime / totalTime);
         mProgressBar.setProgress(i);
         mSubtitleView.processTime((int) playTime);
@@ -241,6 +265,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
 
     private void resetTime() {
         mTime.setText(MediaUtil.generateTime(0, mDuration));
+        mRbTime.setText(MediaUtil.generateTime(0, mDuration));
         mProgressBar.setProgress(0);
         mSubtitleView.reset();
     }
@@ -457,7 +482,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
      *
      * @param in input file
      * @param out output file
-     * @param pitch [-10, 10]
+     * @param pitch range [-12, 12]
      */
     protected void process(String in, String out, float pitch) {
         try {

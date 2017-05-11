@@ -24,13 +24,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -558,13 +555,12 @@ public class AudioHelper {
     public void rawToWaveFile(final File rawFile, final File waveFile) throws IOException {
         DataOutputStream output = null;
         InputStream is  = null;
-        byte[] bytes = new byte[(int)rawFile.length()];
         final short numChannels = 1;
         final short bitsPerSample = 16;
         try {
             output = new DataOutputStream(new FileOutputStream(waveFile));
             WaveHeader waveHeader = new WaveHeader(WaveHeader.FORMAT_PCM, numChannels,
-                    SAMPLE_RATE, bitsPerSample, bytes.length);
+                    SAMPLE_RATE, bitsPerSample, (int) rawFile.length());
             waveHeader.write(output);
 
             is = new DataInputStream(new FileInputStream(rawFile));

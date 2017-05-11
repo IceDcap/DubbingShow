@@ -56,6 +56,7 @@
             android:background="#80000000"/>
 
         <TextView
+            android:id="@+id/upload_dubbing_change_cover_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -78,7 +79,7 @@
             android:orientation="vertical">
 
             <EditText
-                android:id="@+id/upload_dubbing_name_edit_text"
+                android:id="@+id/upload_dubbing_title_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="45dp"
                 android:background="#ff282828"
@@ -94,6 +95,7 @@
                 android:layout_height="1dp"/>
 
             <EditText
+                android:id="@+id/upload_dubbing_content_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="#ff282828"

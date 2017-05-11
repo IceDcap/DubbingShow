@@ -6,7 +6,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -14,9 +13,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.example.missevan.mydubbing.DubbingPreviewActivity;
-import com.example.missevan.mydubbing.MainActivity;
 import com.example.missevan.mydubbing.R;
-import com.example.missevan.mydubbing.audio.AudioHelper;
 import com.example.missevan.mydubbing.camera.CameraContainer;
 import com.example.missevan.mydubbing.camera.CameraView2;
 import com.example.missevan.mydubbing.utils.AudioMedia;
@@ -26,8 +23,6 @@ import com.example.missevan.mydubbing.utils.MediaUtil;
 
 import tv.danmaku.ijk.media.IjkVideoView;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
-import tv.danmaku.ijk.media.player.MediaInfo;
-import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
 import tv.danmaku.ijk.media.player.misc.ITrackInfo;
 
 /**

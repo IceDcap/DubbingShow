@@ -12,6 +12,8 @@ import android.util.Log;
 import com.example.missevan.mydubbing.R;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Locale;
 
 /**
@@ -100,5 +102,29 @@ public class MediaUtil {
             availableBlocks = stat.getAvailableBlocks();
         }
         return availableBlocks * blockSize;
+    }
+
+    /**
+     * Convert a bitmap to png file
+     * @param bitmap bitmap instance
+     * @param filename filename which to write
+     */
+    public static void writeBitmapToLocal(Bitmap bitmap, String filename) {
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(filename);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            // PNG is a lossless format, the compression factor (100) is ignored
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

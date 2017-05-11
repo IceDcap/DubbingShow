@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.graphics.SweepGradient;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -31,6 +32,8 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
     private static final int BACKGROUND_COLOR = 0xff282020;
     private static final int START_COLOR = 0xffb23939;
     private static final int END_COLOR = 0xffad4545;
+    private static final int UN_ENABLE_START_COLOR = 0xff532e2b;
+    private static final int UN_ENABLE_END_COLOR = 0xff513230;
     private static final int DEFAULT_PROGRESS = 100;
     private static final int DEFAULT_TEXT_SIZE = 8;
     private static final int DEFAULT_TEXT_COLOR = 0xffbdbdbd;
@@ -42,6 +45,7 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
     private int mModifierProgress = DEFAULT_PROGRESS_TEXT;
     private String mMaxText = DEFAULT_MAX_TEXT;
     private String mMinText = DEFAULT_MIN_TEXT;
+    private int[] mProgressColor = new int[2];
 
     private ArcProgressStackView mStackView;
     private TextView mModifierTitleTv;
@@ -100,27 +104,27 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
         mStackView = new ArcProgressStackView(context, attributeSet, defStyleAttr);
         mStackView.setModels(mModels);
 
-        final TextView maxTV = new TextView(context);
-        maxTV.setText(mMaxText);
-        maxTV.setTextColor(DEFAULT_TEXT_COLOR);
-        maxTV.setTextSize(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE);
+        mMaxTv = new TextView(context);
+        mMaxTv.setText(mMaxText);
+        mMaxTv.setTextColor(DEFAULT_TEXT_COLOR);
+        mMaxTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE);
 
-        final TextView minTV = new TextView(context);
-        minTV.setText(mMinText);
-        minTV.setTextColor(DEFAULT_TEXT_COLOR);
-        minTV.setTextSize(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE);
+        mMinTv = new TextView(context);
+        mMinTv.setText(mMinText);
+        mMinTv.setTextColor(DEFAULT_TEXT_COLOR);
+        mMinTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE);
 
         final FrameLayout.LayoutParams maxlp = new LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 Gravity.START | Gravity.LEFT | Gravity.BOTTOM);
-        addView(maxTV, maxlp);
+        addView(mMaxTv, maxlp);
 
         final FrameLayout.LayoutParams minlp = new LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 Gravity.END | Gravity.RIGHT | Gravity.BOTTOM);
-        addView(minTV, minlp);
+        addView(mMinTv, minlp);
 
         final FrameLayout.LayoutParams stackviewlp = new LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -158,6 +162,30 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
         super.onLayout(changed, left, top, right, bottom);
         removeView(mContentView);
         addView(mContentView);
+    }
+
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        onViewEnable(enabled);
+        super.setEnabled(enabled);
+    }
+
+    private void onViewEnable(boolean enable) {
+        final int textColor = enable ? DEFAULT_TEXT_COLOR : 0xff3d3d3d;
+        mMaxTv.setTextColor(textColor);
+        mMinTv.setTextColor(textColor);
+        //change progress color to gray & can not to drag
+        mStackView.setIsDragged(enable);
+        final ArcProgressStackView.Model model = mStackView.getModels().get(0);
+        mProgressColor[0] = enable ? END_COLOR : UN_ENABLE_END_COLOR;
+        mProgressColor[1] = enable ? START_COLOR : UN_ENABLE_START_COLOR;
+        model.setColors(mProgressColor);
+        model.setSweepGradient(new SweepGradient(
+                model.getBounds().centerX(),
+                model.getBounds().centerY(),
+                mProgressColor, null));
+        mStackView.postInvalidate();
     }
 
     public void setModifierProgress(int modifierProgress) {

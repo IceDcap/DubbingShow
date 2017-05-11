@@ -5,11 +5,9 @@ import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 
-import com.example.missevan.mydubbing.MainActivity;
+import com.example.missevan.mydubbing.DubbingActivity;
 import com.example.missevan.mydubbing.audio.AudioHelper;
 import com.example.missevan.mydubbing.utils.DimenUtil;
-
-import java.io.PrintStream;
 
 /**
  * Created by dsq on 2017/5/4.
@@ -73,12 +71,12 @@ public class DubbingWaveformView extends WaveformView {
         if (isFullScreen) return;
         final float cur = calCurTime(offset);
         if (cur >= 0 && cur >= numFrames / 50) {
-            if (getContext() instanceof MainActivity) {
-                final MainActivity mainActivity = (MainActivity) getContext();
-                mainActivity.runOnUiThread(new Runnable() {
+            if (getContext() instanceof DubbingActivity) {
+                final DubbingActivity dubbingActivity = (DubbingActivity) getContext();
+                dubbingActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mainActivity.onWaveformProgressChanged((long) (cur * 1000));
+                        dubbingActivity.onWaveformProgressChanged((long) (cur * 1000));
                     }
                 });
             }

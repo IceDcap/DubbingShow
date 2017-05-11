@@ -1,1 +1,1 @@
-include ':app',':ijkplayer-java',':ijkplayer-exo',':androidlame'
+include ':app',':ijkplayer-java',':ijkplayer-exo',':androidlame', 'cropper'
