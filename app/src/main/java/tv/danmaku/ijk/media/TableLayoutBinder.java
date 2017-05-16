@@ -25,7 +25,7 @@ import android.view.ViewGroup;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
-import com.example.missevan.mydubbing.R;
+import com.icedcap.dubbing.R;
 
 
 public class TableLayoutBinder {

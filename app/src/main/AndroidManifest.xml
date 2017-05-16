@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.example.missevan.mydubbing">
+          package="com.icedcap.dubbing">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".DubbingActivity"
+            android:name="com.icedcap.dubbing.DubbingActivity"
             android:hardwareAccelerated="true"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -23,14 +23,14 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SubtitleEditActivity"
+            android:name="com.icedcap.dubbing.SubtitleEditActivity"
             android:screenOrientation="portrait"/>
         <activity
-            android:name=".DubbingPreviewActivity"
+            android:name="com.icedcap.dubbing.DubbingPreviewActivity"
             android:screenOrientation="portrait">
         </activity>
         <activity
-            android:name=".DubbingUploadActivity"
+            android:name="com.icedcap.dubbing.DubbingUploadActivity"
             android:screenOrientation="portrait"/>
 
         <activity

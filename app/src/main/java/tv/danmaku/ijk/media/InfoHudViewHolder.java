@@ -7,7 +7,7 @@ import android.util.SparseArray;
 import android.view.View;
 import android.widget.TableLayout;
 
-import com.example.missevan.mydubbing.R;
+import com.icedcap.dubbing.R;
 
 import java.util.Locale;
 

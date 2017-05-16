@@ -39,9 +39,9 @@ import android.widget.MediaController;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
-import com.example.missevan.mydubbing.R;
-import com.example.missevan.mydubbing.services.MediaPlayerService;
-import com.example.missevan.mydubbing.utils.Config;
+import com.icedcap.dubbing.R;
+import com.icedcap.dubbing.services.MediaPlayerService;
+import com.icedcap.dubbing.utils.Config;
 
 import java.io.File;
 import java.io.IOException;

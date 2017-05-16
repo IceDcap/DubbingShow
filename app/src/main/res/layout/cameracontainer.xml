@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.example.missevan.mydubbing.camera.CameraView2
+    <com.icedcap.dubbing.camera.CameraView2
         android:id="@+id/cameraView2"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

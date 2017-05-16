@@ -166,6 +166,7 @@
                     android:layout_marginRight="10.0dp"
                     android:text="保存"
                     android:textSize="15sp"
+                    android:visibility="gone"
                     android:textColor="#ffbdbdbd"/>
             </FrameLayout>
         </LinearLayout>
@@ -175,7 +176,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <com.example.missevan.mydubbing.view.DubbingVideoView
+            <com.icedcap.dubbing.view.DubbingVideoView
                 android:id="@+id/videoView"
                 android:layout_width="match_parent"
                 android:layout_height="200.0dp" />
@@ -254,17 +255,17 @@
                     android:background="#ff282828">
 
 
-                    <com.example.missevan.mydubbing.view.DubbingSubtitleView
+                    <com.icedcap.dubbing.view.DubbingSubtitleView
                         android:id="@+id/subtitleView"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
 
-                    <com.example.missevan.mydubbing.view.DubbingWaveformView
+                    <com.icedcap.dubbing.view.WaveformView
                         android:id="@+id/dubbingWaveform"
                         android:layout_width="match_parent"
                         android:layout_height="75dp"
                         android:layout_gravity="bottom"
-                        android:background="#ff1b1b1b"
+                        android:background="#ff1d1c1c"
                         android:visibility="invisible" />
                 </FrameLayout>
 
@@ -330,7 +331,7 @@
                         android:clipChildren="false">
 
                         <FrameLayout
-                            android:id="@+id/withdrawcotainer"
+                            android:id="@+id/withdraw_container"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_centerInParent="true"
@@ -340,10 +341,10 @@
                                 android:id="@+id/withdraw"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:src="@drawable/dubbing_icon_withdraw_enable" />
+                                android:src="@drawable/icon_redub" />
 
                             <TextView
-                                android:id="@+id/withdrawcount"
+                                android:id="@+id/withdraw_count"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center|right|top"

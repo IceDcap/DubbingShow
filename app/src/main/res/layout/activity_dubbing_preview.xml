@@ -73,7 +73,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <com.example.missevan.mydubbing.view.DubbingVideoView
+            <com.icedcap.dubbing.view.DubbingVideoView
                 android:id="@+id/videoView"
                 android:layout_width="match_parent"
                 android:layout_height="200.0dp"/>
@@ -99,7 +99,7 @@
                 android:minHeight="2.0dp"
                 android:progressDrawable="@drawable/dubbing_progressbar3"/>
 
-            <com.example.missevan.mydubbing.view.PreviewSubtitleView
+            <com.icedcap.dubbing.view.PreviewSubtitleView
                 android:id="@+id/preview_subtitle_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
