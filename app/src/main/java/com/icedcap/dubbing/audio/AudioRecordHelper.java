@@ -117,6 +117,7 @@ public class AudioRecordHelper {
     public void stopMediaPlayer() {
         if (mWaveMediaPlayer != null && mWaveMediaPlayer.isPlaying()) {
             mWaveMediaPlayer.stop();
+            mWaveMediaPlayer = null;
             if (mOnAudioRecordListener != null) {
                 mOnAudioRecordListener.onMediaPlayerStop();
             }
@@ -298,7 +299,7 @@ public class AudioRecordHelper {
             FileDescriptor fd = null;
             FileInputStream fis = new FileInputStream(file);
             fd = fis.getFD();
-            if (fd != null) {
+            if (fd != null ) {
                 mWaveMediaPlayer.setDataSource(fd);
                 mWaveMediaPlayer.prepare();
 //                mediaPlayer.start();

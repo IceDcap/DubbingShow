@@ -360,7 +360,7 @@
                             android:id="@+id/withdrawtip"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_above="@+id/withdrawcotainer"
+                            android:layout_above="@+id/withdraw_container"
                             android:layout_alignParentLeft="true"
                             android:src="@drawable/ds_dubbing_icon_return"
                             android:visibility="gone" />

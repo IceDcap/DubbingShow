@@ -84,6 +84,13 @@ public class SRTUtil {
     }
 
 
+    /**
+     * Get subtitle index by current time
+     *
+     * @param entity subtitle set
+     * @param time   current time
+     * @return index of current time
+     */
     public static int getIndexByTime(List<? extends SRTEntity> entity, int time) {
         int index = 0;
 
@@ -97,6 +104,32 @@ public class SRTUtil {
         return index > 0 ? index - 1 : 0;
     }
 
+    /**
+     * Get the No. subtitle by time
+     *
+     * @param entity subtitle set
+     * @param time   current time
+     * @return the No. of subtitle
+     */
+    public static int getSubtitleNumByTime(List<? extends SRTEntity> entity, int time) {
+        if (time == 0) return 0;
+        int index = 0;
+        for (; index < entity.size(); index++) {
+            int st = entity.get(index).getStarttime();
+            if (time < st) {
+                return index + 1;
+            }
+        }
+        return index > 0 ? index + 1 : 0;
+    }
+
+    /**
+     * Get time by subtitle index
+     *
+     * @param entity subtitle set
+     * @param index  subtitle index
+     * @return time of current index of subtitle
+     */
     public static long getTimeByIndex(List<? extends SRTEntity> entity, int index) {
         int res = 0;
         if (entity == null || entity.size() == 0 || index < 0 || index > entity.size() - 1)
@@ -108,6 +141,8 @@ public class SRTUtil {
             int halfInt = (s - e) / 2;
             halfInt = halfInt > 1000 ? 1000 : halfInt;
             res = s - halfInt;
+        } else {
+            res = s / 2;
         }
         return res;
     }

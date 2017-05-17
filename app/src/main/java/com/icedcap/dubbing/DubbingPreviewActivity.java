@@ -14,8 +14,7 @@ import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
-import com.icedcap.dubbing.R;
-import com.icedcap.dubbing.audio.AudioHelper;
+import com.icedcap.dubbing.audio.AudioPlayHelper;
 import net.surina.soundtouch.SoundTouch;
 
 import com.icedcap.dubbing.entity.SRTEntity;
@@ -44,7 +43,7 @@ import static com.icedcap.dubbing.view.DubbingVideoView.MODE_FINALLY_REVIEW;
  * 4. personal & background audio room size process
  * 5. personal & background audio echo process
  */
-public class DubbingPreviewActivity extends Activity implements View.OnClickListener, AudioHelper.OnAudioRecordPlaybackListener {
+public class DubbingPreviewActivity extends Activity implements View.OnClickListener, AudioPlayHelper.OnAudioRecordPlaybackListener {
     private static final String LOG_TAG = "DubbingPreviewActivity";
     private static final String EXTRA_RECORD_FILE_PATH_KEY = "extra-record-file-path-key";
     private static final String EXTRA_PITCH_FILE_PATH_KEY = "extra-pitch-file-path-key";
@@ -62,7 +61,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     private boolean isPitched;
     private float mPitchParam;
 
-    private AudioHelper mAudioHelper;
+    private AudioPlayHelper mAudioHelper;
 
     // ui components
     private UprightModifierView mPersonalUprightView;
@@ -192,7 +191,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
         mBackgroundFilePath = extraData.getStringArrayExtra(EXTRA_BACKGROUND_FILE_PATH_KEY);
         mSRTEntities = extraData.getParcelableArrayListExtra(EXTRA_SRT_SUBTITLE_KEY);
         mSubtitleView.setSRTEntities(mSRTEntities);
-        mAudioHelper = new AudioHelper(this, this);
+        mAudioHelper = new AudioPlayHelper(this);
         mAudioHelper.setFile(new File(mRecordFilePath));
     }
 
@@ -235,8 +234,13 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
                 return true;
             }
 
+//            @Override
+//            public void onVideoCompletion() {
+//                resetTime();
+//            }
+
             @Override
-            public void onVideoCompletion() {
+            public void onFinalReviewComplete() {
                 resetTime();
             }
 
@@ -257,6 +261,11 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
             @Override
             public void reset(boolean keepStatus) {
                 mProgressBar.setProgress(0);
+            }
+
+            @Override
+            public int fixThePlayMode() {
+                return MODE_FINALLY_REVIEW;
             }
         });
     }

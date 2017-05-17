@@ -38,12 +38,17 @@ public class DubbingVideoViewEventAdapter implements DubbingVideoView.OnEventLis
     }
 
     @Override
+    public int onPreviewPrepared() {
+        return 0;
+    }
+
+    @Override
     public void onPreviewPlay() {
 
     }
 
     @Override
-    public void onPreviewStop() {
+    public void onPreviewStop(int resetPos) {
 
     }
 
@@ -95,5 +100,20 @@ public class DubbingVideoViewEventAdapter implements DubbingVideoView.OnEventLis
     @Override
     public void onPlayback(int pos) {
 
+    }
+
+    @Override
+    public void onDubbingComplete() {
+
+    }
+
+    @Override
+    public void onFinalReviewComplete() {
+
+    }
+
+    @Override
+    public int fixThePlayMode() {
+        return -1;
     }
 }

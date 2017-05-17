@@ -1,16 +1,12 @@
 package com.icedcap.dubbing.audio;
 
-import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
-import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaPlayer;
-import android.media.MediaRecorder;
 
 
 import android.os.Build;
-import android.os.Process;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -20,11 +16,9 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
@@ -34,24 +28,19 @@ import java.util.concurrent.ThreadPoolExecutor;
 /**
  * Created by dsq on 2017/5/2.
  */
-public class AudioHelper {
-    private static final String LOG_TAG = AudioHelper.class.getSimpleName();
+public class AudioPlayHelper {
+    private static final String LOG_TAG = AudioPlayHelper.class.getSimpleName();
     private static final String NAME_AUDIO_PERSONAL = "personal-audio";
     private static final String NAME_AUDIO_BACKGROUND = "background-audio";
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
     private static final int EOF = -1;
 
-    private Context mContext;
     private String mCachePath;
     //    private FileOutputStream mFileOutputStream;
-    private RandomAccessFile mRandomAccessFile;
     private File mFile;
-    private static long sRecordedDuration;
-    public static long sWroteAccessFilePointer;
 
     private ShortBuffer mSamples; // the samples to play
     private int mNumSamples; // number of samples to play
-    private int mRecordBufferSize;
     private Thread mAudioPlayback;
     private ThreadPoolExecutor mExecutorService;
 
@@ -65,24 +54,8 @@ public class AudioHelper {
     private MediaPlayer mWaveMediaPlayer; // use for play background audio (wav)
     private AudioTrack mAudioTrack; // use for play personal audio (pcm)
 
-    public AudioHelper(Context context) {
-        mContext = context;
-        File f = context.getExternalFilesDir(null);
-        if (null != f) {
-            mCachePath = f.getAbsolutePath();
-        }
-        mFile = new File(mCachePath,/* System.currentTimeMillis() +*/ "tmp.pcm");
-        try {
-            mRandomAccessFile = new RandomAccessFile(mFile, "rw");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+    public AudioPlayHelper(OnAudioRecordPlaybackListener listener) {
         mExecutorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
-
-    }
-
-    public AudioHelper(Context context, OnAudioRecordPlaybackListener listener) {
-        this(context);
         mListener = listener;
     }
 
@@ -102,69 +75,6 @@ public class AudioHelper {
 
     public void setFile(File file) {
         mFile = file;
-    }
-
-    private void recordAudio(final long offset) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
-
-                // buffer size
-                mRecordBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE,
-                        AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
-                if (mRecordBufferSize == AudioRecord.ERROR || mRecordBufferSize == AudioRecord.ERROR_BAD_VALUE) {
-                    mRecordBufferSize = SAMPLE_RATE * 2;
-                }
-
-                short[] audioBuffer = new short[mRecordBufferSize / 2];
-
-                AudioRecord audioRecord = new AudioRecord(MediaRecorder.AudioSource.DEFAULT,
-                        SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
-                        AudioFormat.ENCODING_PCM_16BIT, mRecordBufferSize);
-
-                if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
-                    Log.e(LOG_TAG, "Audio Record can not initialized!");
-                    return;
-                }
-
-                audioRecord.startRecording();
-                final long startPoint = System.currentTimeMillis();
-
-                Log.v(LOG_TAG, "Start recording...");
-
-                try {
-                    mRandomAccessFile.seek(offset);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                long bytesRead = 0;
-                long shortsRead = 0;
-                while (mShouldContinue) {
-                    int numberOfShort = audioRecord.read(audioBuffer, 0, audioBuffer.length);
-                    shortsRead += numberOfShort;
-
-                    // write to storage
-                    byte[] b = short2byte(audioBuffer);
-                    bytesRead += b.length;
-                    try {
-                        mRandomAccessFile.write(b, 0, mRecordBufferSize);
-                        sWroteAccessFilePointer = mRandomAccessFile.getFilePointer();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                final long endPoint = System.currentTimeMillis();
-                audioRecord.stop();
-                sRecordedDuration += endPoint - startPoint;
-                if (null != mListener) {
-                    mListener.onAudioDataReceived(sRecordedDuration, sWroteAccessFilePointer);
-                }
-                audioRecord.release();
-                Log.v(LOG_TAG, String.format("Recording stopped. Samples read: %d", shortsRead));
-            }
-        }).start();
     }
 
 
@@ -391,43 +301,6 @@ public class AudioHelper {
         }
     }
 
-    /**
-     * Get had recorded time
-     */
-    public long getHadRecordTime() {
-        long time = 0;
-        try {
-            time = mRandomAccessFile.getFilePointer();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return time;
-    }
-
-
-    /**
-     * Record audio
-     */
-    public void startRecord(long pointer) {
-        if (mShouldContinue) return;
-        mShouldContinue = true;
-        recordAudio(pointer);
-    }
-
-    /**
-     * Audio is recording or not
-     */
-    public boolean isRecording() {
-        return mShouldContinue;
-    }
-
-    /**
-     * Stop record audio
-     */
-    public void stopRecord() {
-        mShouldContinue = false;
-    }
-
 
     /**
      * Audio is playing or not
@@ -481,13 +354,6 @@ public class AudioHelper {
     }
 
 
-    public String getRecordFilePath() {
-        if (mFile != null) {
-            return mFile.getAbsolutePath();
-        }
-        return null;
-    }
-
     public File getRecordFile() {
         return mFile;
     }
@@ -532,23 +398,6 @@ public class AudioHelper {
             count += n;
         }
         return output.toByteArray();
-    }
-
-    public static long accessFilePointer2duration(long pointer) {
-        if (sWroteAccessFilePointer == 0) return 0;
-        if (sRecordedDuration > 0 && pointer < sWroteAccessFilePointer) {
-            return sRecordedDuration * pointer / sWroteAccessFilePointer;
-        }
-        return 0;
-    }
-
-    public static long duration2accessFilePointer(long duration) {
-        if (sRecordedDuration == 0) return 0;
-        if (sWroteAccessFilePointer > 0 && duration <= sRecordedDuration) {
-            return duration * sWroteAccessFilePointer / sRecordedDuration;
-        }
-
-        return 0;
     }
 
     /** Convert raw data to wave file */
@@ -608,7 +457,6 @@ public class AudioHelper {
     }
 
     public void onPause() {
-        stopRecord();
         stopPlay();
         stopCombineAudio();
         stopMediaPlayer();

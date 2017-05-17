@@ -7,9 +7,7 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.drawable.LevelListDrawable;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.os.AsyncTask;
-import android.os.CountDownTimer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -17,7 +15,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
@@ -26,9 +23,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.icedcap.dubbing.audio.AudioHelper;
 import com.icedcap.dubbing.audio.AudioRecordHelper;
 import com.icedcap.dubbing.entity.SRTEntity;
+import com.icedcap.dubbing.listener.DubbingVideoViewEventAdapter;
 import com.icedcap.dubbing.utils.Config;
 import com.icedcap.dubbing.utils.MediaUtil;
 import com.icedcap.dubbing.utils.SRTUtil;
@@ -45,11 +42,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.icedcap.dubbing.view.DubbingVideoView.MODE_DUBBING;
-import static com.icedcap.dubbing.view.DubbingVideoView.MODE_IDEL;
+import static com.icedcap.dubbing.view.DubbingVideoView.MODE_IDLE;
 
-public class DubbingActivity extends AppCompatActivity implements DubbingVideoView.OnEventListener,
-        AudioHelper.OnAudioRecordPlaybackListener, WaveformView.WaveformListener
-        , AudioRecordHelper.OnAudioRecordListener {
+public class DubbingActivity extends AppCompatActivity implements
+        WaveformView.WaveformListener,
+        AudioRecordHelper.OnAudioRecordListener {
     private static final int MATERIAL = 1;
     private static final int[] SUBTITLE = new int[]{
             R.raw.subtitle,
@@ -69,12 +66,6 @@ public class DubbingActivity extends AppCompatActivity implements DubbingVideoVi
             }
     };
     private File mVideoFile;
-    private static final String BASE = "/sdcard/MyDubbing/audio_temp/";
-    //    private static String MP3_PATH;
-    private static String WAV_PATH;
-
-//    private AudioHelper mAudioHelper;
-
 
     private void setScreenWidth() {
         DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -89,31 +80,23 @@ public class DubbingActivity extends AppCompatActivity implements DubbingVideoVi
     private long mDuration;
     private int mWaitingNumber = 3;
 
-    private int reviewFlagTime = 0;
-
     boolean isReviewing = false;
 
     // data set
     List<SRTEntity> mSrtEntityList;
     private boolean isDubbing;
-//    private long mRecordTime;
 
     // audio record relevant
     private AudioRecordHelper mAudioRecordHelper;
-    private long mRecordedDuration;
-    private long mWroteAccessFilePointer;
     private boolean isRecording;
     private long mHadRecordTime;
-    private MediaPlayer mMediaPlayer;
-    private CountDownTimer mCountDownTimer; // review by count down timer
-    private long MAX_DURATION = 0;
-    private File mUpSoundFile;
     private File mFile;
     private long mLastSeek;
     private long mPlayTime;
     private int mWaveIndex;
     private int[] mWaveHeights = new int[2400];
     private boolean isFinishArt;
+    private int mRollbackPos;
 
     // view component
     private DubbingSubtitleView mDubbingSubtitleView;
@@ -187,6 +170,13 @@ public class DubbingActivity extends AppCompatActivity implements DubbingVideoVi
         if (mDubbingVideoView != null) {
             mDubbingVideoView.onPause();
         }
+        if (isReviewing) {
+            onTryListenClick();
+        }
+        if (isRecording) {
+            isDubbing = false;
+            dubbing();
+        }
     }
 
     @Override
@@ -253,7 +243,7 @@ public class DubbingActivity extends AppCompatActivity implements DubbingVideoVi
             @Override
             protected void onPostExecute(Void aVoid) {
                 dialog.cancel();
-                mDubbingVideoView.setPara(video, "", false, 0, "", DubbingActivity.this, DubbingActivity.this);
+                mDubbingVideoView.setPara(video, "", false, 0, "", new VideoViewListener(), DubbingActivity.this);
             }
         }.execute();
 
@@ -412,52 +402,6 @@ public class DubbingActivity extends AppCompatActivity implements DubbingVideoVi
         return res;
     }
 
-    /**
-     * REVIEW BTN PERFORM CLICK
-     */
-    public void onTryListenClick() {
-        final LevelListDrawable tryListenDrawable = (LevelListDrawable) mTryListenBtn.getDrawable();
-        final int level = tryListenDrawable.getLevel();
-        mTryListenBtn.setImageLevel((level + 1) % 2);
-        switch (level) {
-            case 0:
-                startReview();
-                break;
-            case 1:
-                stopReview();
-                break;
-        }
-    }
-
-
-    /**
-     * ACTION-BTN PERFORM CLICK
-     */
-    private void dubbing() {
-        if (isDubbing) {
-            mCompleteBtn.setVisibility(View.GONE);
-            toggleWaitingIndicator();
-        } else {
-            if (mDubbingVideoView.isPlaying()) {
-                mAudioRecordHelper.stopRecord();
-                mWaveformView.setVisibility(View.VISIBLE);
-            } else {
-                collapseWaitingIndicator();
-            }
-            mDubbingVideoView.stopDubbing();
-            mAction.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.dubbing_btn_record));
-            isRecording = false;
-        }
-        showTryListenBtn();
-    }
-
-    private void showTryListenBtn() {
-        mTryListenBtn.setVisibility(isDubbing ? View.GONE : View.VISIBLE);
-        mWithdrawContainer.setVisibility(isDubbing ? View.GONE : View.VISIBLE);
-        if (!isDubbing) {
-            refreshWithdrawText(SRTUtil.getIndexByTime(mSrtEntityList, (int) mPlayTime));
-        }
-    }
 
     /**
      * THIS SRT SUBTITLE SHOULD FETCH FROM SDCARD BY PRE-ACTIVITY DOWNLOADED
@@ -502,14 +446,14 @@ public class DubbingActivity extends AppCompatActivity implements DubbingVideoVi
         String str = MediaUtil.generateTime(playTime, totalTime);
         mVideoTime.setText(str);
         if (mDubbingSubtitleView != null) {
-            if (videoMode == DubbingVideoView.MODE_IDEL) {
+            if (videoMode == MODE_IDLE) {
                 mDubbingSubtitleView.refresh((int) playTime);
             } else {
                 mDubbingSubtitleView.processTime((int) playTime);
             }
         }
         int i = (int) (100L * playTime / totalTime);
-        if (videoMode == MODE_DUBBING || videoMode == MODE_IDEL) {
+        if (videoMode == MODE_DUBBING || videoMode == MODE_IDLE) {
             mProgressBar.setProgress(i);
             mProgressBar.setSecondaryProgress(i);
             return;
@@ -558,15 +502,6 @@ public class DubbingActivity extends AppCompatActivity implements DubbingVideoVi
         mWaveIndex = mWaveformView.getLeftWaveLengthByIndicator();
     }
 
-    private void playAudio() {
-        mPlayTime = mWaveformView.getCurrentTimeByIndicator();
-        mLastSeek = mPlayTime;
-        if (mPlayTime >= mWaveformView.getCurrentTotalTime()) {
-            mPlayTime = 0;
-        }
-        mAudioRecordHelper.play(mPlayTime);
-    }
-
     private void resetUiWhenFinishArt() {
         mDubbingVideoView.reset(true);
         mWaveformView.refreshToStartPos();
@@ -574,24 +509,6 @@ public class DubbingActivity extends AppCompatActivity implements DubbingVideoVi
         mPlayTime = 0;
     }
 
-    /**
-     * Withdraw click
-     */
-    private void onWithdraw(long mCurrentTime) {
-        if (mCurrentTime == 0 || mSrtEntityList == null || mSrtEntityList.size() == 0) return;
-        Log.e("ccc", "current time = " + mCurrentTime);
-        int index = SRTUtil.getIndexByTime(mSrtEntityList, (int) mCurrentTime);
-        Log.e("ccc", "index >. " + index);
-        index = index < 0 ? 0 : index;
-        long withdrawTime = SRTUtil.getTimeByIndex(mSrtEntityList, index);
-        Log.e("ccc", "withdrawTime withdrawTime = " + withdrawTime);
-        onWaveformScrolled(withdrawTime);
-        mWaveformView.refreshByPos(withdrawTime);
-    }
-
-    private void refreshWithdrawText(int index) {
-        mWithdrawCount.setText(String.valueOf(index));
-    }
 
     private Runnable mWaitingTask = new Runnable() {
         @Override
@@ -603,9 +520,6 @@ public class DubbingActivity extends AppCompatActivity implements DubbingVideoVi
                     mWaveformView.setVisibility(View.INVISIBLE);
                     record();
                     mDubbingVideoView.startDubbing(mPlayTime);
-                    //fixme start record audio here!!!
-                    //todo: the variable 'mRecordedDuration' should change by wave bar
-//                    mAudioHelper.startRecord(mWroteAccessFilePointer);
                     if (mLastSeek >= mDuration) {
                         mLastSeek = 0;
                         mWaveformView.refreshToStartPos();
@@ -622,203 +536,85 @@ public class DubbingActivity extends AppCompatActivity implements DubbingVideoVi
         }
     };
 
-    @Override
-    public void onVideoPrepared(long duration) {
-        mDuration = duration;
-        if (mVideoTime != null) {
-            mVideoTime.setText(MediaUtil.generateTime(0, mDuration));
+
+    //////////////////////------video view listener----/////////////////////////////
+    final class VideoViewListener extends DubbingVideoViewEventAdapter{
+        @Override
+        public void onVideoPrepared(long duration) {
+            mDuration = duration;
+            if (mVideoTime != null) {
+                mVideoTime.setText(MediaUtil.generateTime(0, mDuration));
+            }
+
+            mWaveformView.setDuration((int) mDuration / 1000);
+            mWaveformView.setWaveformListener(DubbingActivity.this);
         }
 
-        mWaveformView.setDuration((int) mDuration / 1000);
-        mWaveformView.setWaveformListener(this);
-    }
 
-    @Override
-    public void onDoubleClick() {
-        // no - op
-    }
-
-    @Override
-    public void onError() {
-        // no - op
-    }
-
-    @Override
-    public void onLivingChanged() {
-        // no - op
-    }
-
-    @Override
-    public void onOverEightSeconds() {
-        // no - op
-    }
-
-    @Override
-    public boolean onPlayTimeChanged(long playTime, long totalTime, int videoMode) {
-        mDuration = totalTime;
-//        if (this.isReviewing) {
-//            if (playTime >= this.reviewFlagTime) {
-//                stopReview();
-//                return false;
-//            }
-////            this.dubbingWaveform.seekToWithoutRecorder(playTime);
-//            // TODO: 2017/4/27 WAVE RECORDER SHOULD UPDATE
-//        }
-        refreshTime(playTime, totalTime, videoMode);
-        if (videoMode == MODE_DUBBING) {
-            mHadRecordTime = playTime;
-        }
-        return true;
-    }
-
-    @Override
-    public void onPreviewPlay() {
-        mAction.setEnabled(false);
-//        mDubbingVideoView.setDubbingLength(mWaveformView.getCurrentTotalTime());
-        if (mWaveformView.getWaveHeights() != null) {
-            isDubbing = true;
-            showTryListenBtn();
-        }
-    }
-
-    @Override
-    public void onPreviewStop() {
-        mDubbingSubtitleView.reset();
-        resetPreviewUI();
-    }
-
-    @Override
-    public void onSoundPreview() {
-
-    }
-
-    @Override
-    public void onStarToPlay() {
-
-    }
-
-    @Override
-    public void onStartTrackingTouch() {
-
-    }
-
-    @Override
-    public void onStopTrackingTouch() {
-
-    }
-
-    @Override
-    public void onVideoCompletion() {
-        resetPreviewUI();
-        final int mode = mDubbingVideoView.getMode();
-        if (mode == MODE_DUBBING) {
+        @Override
+        public void onDubbingComplete() {
             mCompleteBtn.setVisibility(View.VISIBLE);
             isDubbing = false;
             mAudioRecordHelper.stopRecord();
             dubbing();
             processCompleteArtInNewActivity();
-        } else if (mode == DubbingVideoView.MODE_PREVIEW) {
-            resetLastUiState(mHadRecordTime);
-        } else {
-            onTryListenClick();
         }
-    }
 
-    @Override
-    public void onVideoPause() {
 
-    }
-
-    @Override
-    public void onWhiteVideoPlay() {
-
-    }
-
-    @Override
-    public void onWhiteVideoStop() {
-
-    }
-
-    @Override
-    public void reset(boolean reset) {
-//        updatePreviewUI();
-    }
-
-    private void startReview() {
-        //todo play background audio
-        playAudio();
-        mDubbingVideoView.startReview(mPlayTime);
-        mAction.setEnabled(false);
-//        mProgressBar.setProgress(0);
-//        mProgressBar.setSecondaryProgress(0);
-//        mCountDownTimer = new CountDownTimer(mRecordedDuration, 1000) {
-//            @Override
-//            public void onTick(long millisUntilFinished) {
-//
-//            }
-//
-//            @Override
-//            public void onFinish() {
-//                onTryListenClick();
-//            }
-//        };
-//        mCountDownTimer.start();
-        isReviewing = true;
-    }
-
-    private void stopReview() {
-//        mAudioHelper.stopPlay();
-        mAudioRecordHelper.stopMediaPlayer();
-        mDubbingVideoView.stopReview((int) mLastSeek);
-        mAction.setEnabled(true);
-//        final int resetTimeByAccessFilePointer = (int) mRecordedDuration;
-//        final int resetTimeByIjkVideoView = (int) mDubbingVideoView.getDubbingLength();
-//        final int resetTime = resetTimeByIjkVideoView == 0 ? resetTimeByAccessFilePointer : resetTimeByIjkVideoView;
-//        mProgressBar.setSecondaryProgress(0);
-
-//        refreshTime(resetTime, mDuration, (mDuration - resetTime) > 1000 ?
-//                MODE_DUBBING : DubbingVideoView.MODE_REVIEW);
-        isReviewing = false;
-    }
-
-    @Override
-    public void onPlayback(int time) {
-        int i = (int) (100L * time / mDuration);
-        mProgressBar.setSecondaryProgress(i);
-        mDubbingSubtitleView.refresh(time);
-        mAction.setEnabled(true);
-//        mAction.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.dubbing_btn_record));
-        if (mWaveformView.getWaveHeights() != null) {
-            isDubbing = false;
-            showTryListenBtn();
+        @Override
+        public int onPreviewPrepared() {
+            return (int) mPlayTime;
         }
+
+        @Override
+        public void onPreviewPlay() {
+            mAction.setEnabled(false);
+            // should hide waveform if has dubbed
+            if (mWaveformView.getWaveHeights() != null) {
+                controlComponentVisible(mWaveformView, false);
+                isDubbing = true;
+                showTryListenBtn();
+            }
+        }
+
+        @Override
+        public void onPreviewStop(int resetPos) {
+            mDubbingSubtitleView.reset();
+
+            int i = (int) (100L * resetPos / mDuration);
+            mProgressBar.setSecondaryProgress(i);
+            mDubbingSubtitleView.refresh(resetPos);
+            mAction.setEnabled(true);
+            if (mWaveformView.getWaveHeights() != null) {
+                controlComponentVisible(mWaveformView, true);
+                isDubbing = false;
+                showTryListenBtn();
+            }
+        }
+
+        @Override
+        public boolean onPlayTimeChanged(long playTime, long totalTime, int videoMode) {
+            mDuration = totalTime;
+            refreshTime(playTime, totalTime, videoMode);
+            if (videoMode == MODE_DUBBING) {
+                mHadRecordTime = playTime;
+            }
+            return true;
+        }
+
     }
 
-    @Override
-    public void onAudioDataReceived(long duration, long bytesRead) {
-        mRecordedDuration = duration;
-        mWroteAccessFilePointer = bytesRead;
-    }
-
-    @Override
-    public void onProgress(int pos) {
-    }
-
-    @Override
-    public void onCompletion() {
-    }
-
+    //////////////////////------wave listener----/////////////////////////////
     @Override
     public void onWaveformScrolled(long seek) {
         mPlayTime = seek;
         mLastSeek = seek;
         mWaveIndex = (int) (seek / mWaveformView.getPeriodPerFrame());
-        refreshTime(seek, mDuration, DubbingVideoView.MODE_IDEL);
+        refreshTime(seek, mDuration, MODE_IDLE);
         mDubbingVideoView.seekTo((int) seek);
-        if (seek < mDuration) {
-            mAction.setEnabled(true);
-        }
-        refreshWithdrawText(SRTUtil.getIndexByTime(mSrtEntityList, (int) seek));
+        mAction.setEnabled(seek < mDuration);
+        int num = SRTUtil.getSubtitleNumByTime(mSrtEntityList, (int) seek);
+        refreshWithdrawText(num);
     }
 
     @Override
@@ -845,6 +641,8 @@ public class DubbingActivity extends AppCompatActivity implements DubbingVideoVi
         });
         mWaveIndex++;
     }
+
+    //////////////////////------audio record or play----/////////////////////////////
 
     @Override
     public void onUpdateWaveFramePos() {
@@ -879,9 +677,9 @@ public class DubbingActivity extends AppCompatActivity implements DubbingVideoVi
     public void onMediaPlayerComplete() {
         mWaveformView.refreshToEndPos();
         mPlayTime = mWaveformView.getCurrentTotalTime();
-        if (mDubbingVideoView.isPlaying()) {
-            onTryListenClick();
-        }
+//        if (mDubbingVideoView.isPlaying()) {
+        onTryListenClick();
+//        }
         mWaveformView.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -890,4 +688,130 @@ public class DubbingActivity extends AppCompatActivity implements DubbingVideoVi
         }, 100);
 
     }
+
+
+    private void controlComponentVisible(View v, boolean isShow) {
+        if (v == null) return;
+        v.setVisibility(isShow ? View.VISIBLE : View.GONE);
+    }
+
+    /**
+     * Withdraw click
+     */
+    private void onWithdraw(long mCurrentTime) {
+        if (mCurrentTime == 0 || mSrtEntityList == null || mSrtEntityList.size() == 0) {
+            resetHaveNotDubbedState();
+            return;
+        }
+        final int num = SRTUtil.getSubtitleNumByTime(mSrtEntityList, (int) mCurrentTime);
+        if (num <= 1) {
+            resetHaveNotDubbedState();
+        }
+        final int lastIndex = num - 2;
+        long withdrawTime = SRTUtil.getTimeByIndex(mSrtEntityList, lastIndex);
+
+        onWaveformScrolled(withdrawTime);
+        mWaveformView.refreshByPos(withdrawTime);
+    }
+
+    private void resetHaveNotDubbedState() {
+        mPlayTime = 0;
+        mLastSeek = 0;
+        mRollbackPos = 0;
+        mWaveformView.reset();
+        mDubbingSubtitleView.reset();
+        controlComponentVisible(mWithdrawContainer, false);
+        controlComponentVisible(mWaveformView, false);
+        controlComponentVisible(mTryListenBtn, false);
+    }
+
+    private void refreshWithdrawText(int index) {
+        controlComponentVisible(mWithdrawCount, index > 0);
+        mWithdrawCount.setText(String.valueOf(index));
+    }
+
+    /**
+     * ACTION-BTN PERFORM CLICK
+     */
+    private void dubbing() {
+        if (isDubbing) {
+            mCompleteBtn.setVisibility(View.GONE);
+            toggleWaitingIndicator();
+        } else {
+            if (mDubbingVideoView.isPlaying()) {
+                mAudioRecordHelper.stopRecord();
+                mWaveformView.setVisibility(View.VISIBLE);
+            } else {
+                collapseWaitingIndicator();
+            }
+            mDubbingVideoView.stopDubbing();
+            mAction.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.dubbing_btn_record));
+            isRecording = false;
+            mRollbackPos = (int) mWaveformView.getCurrentTimeByIndicator();
+        }
+        showTryListenBtn();
+    }
+
+    private void showTryListenBtn() {
+        controlComponentVisible(mTryListenBtn, !isDubbing);
+        if (mRollbackPos > 0) {
+            controlComponentVisible(mWithdrawContainer, !isDubbing && !isReviewing);
+        }
+        if (!isDubbing) {
+            int pos = SRTUtil.getSubtitleNumByTime(mSrtEntityList, (int) mPlayTime);
+            refreshWithdrawText(pos);
+        }
+    }
+
+
+    /**
+     * REVIEW BTN PERFORM CLICK
+     */
+    public void onTryListenClick() {
+        final LevelListDrawable tryListenDrawable = (LevelListDrawable) mTryListenBtn.getDrawable();
+        final int level = tryListenDrawable.getLevel();
+        final int i = (level + 1) % 2;
+        mTryListenBtn.setImageLevel(i);
+        //show or hide withdraw
+        controlComponentVisible(mWithdrawContainer, i != 1);
+        switch (level) {
+            case 0:
+                startReview();
+                break;
+            case 1:
+                stopReview();
+                break;
+        }
+    }
+
+
+    private void startReview() {
+        isReviewing = true;
+        //todo play background audio
+
+        // play the recorded audio from indicator pos
+        mPlayTime = mWaveformView.getCurrentTimeByIndicator();
+        mLastSeek = mPlayTime;
+        if (mPlayTime >= mWaveformView.getCurrentTotalTime()) {
+            mPlayTime = 0;
+        }
+        mDubbingSubtitleView.refresh((int) mPlayTime);
+        mAudioRecordHelper.play(mPlayTime);
+
+        // play video view
+        mDubbingVideoView.startReview(mPlayTime);
+        mAction.setEnabled(false);
+
+    }
+
+    private void stopReview() {
+        //stop audio play
+        mAudioRecordHelper.stopMediaPlayer();
+        //stop video view
+        mDubbingVideoView.stopReview((int) mLastSeek);
+
+        mAction.setEnabled(mLastSeek < mDuration);
+        isReviewing = false;
+    }
+
 }
