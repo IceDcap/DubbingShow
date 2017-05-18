@@ -8,6 +8,7 @@ import android.content.res.AssetManager;
 import android.graphics.drawable.LevelListDrawable;
 import android.media.AudioManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -47,7 +48,8 @@ import static com.icedcap.dubbing.view.DubbingVideoView.MODE_IDLE;
 public class DubbingActivity extends AppCompatActivity implements
         WaveformView.WaveformListener,
         AudioRecordHelper.OnAudioRecordListener {
-    private static final int MATERIAL = 1;
+    private static final int PERMISSION_REQUEST_CODE = 0x520;
+    private static final int MATERIAL = 0;
     private static final int[] SUBTITLE = new int[]{
             R.raw.subtitle,
             R.raw.subtitle1,
@@ -85,6 +87,7 @@ public class DubbingActivity extends AppCompatActivity implements
     // data set
     List<SRTEntity> mSrtEntityList;
     private boolean isDubbing;
+    private List<String> mPermissions = new ArrayList<>();
 
     // audio record relevant
     private AudioRecordHelper mAudioRecordHelper;
@@ -125,17 +128,26 @@ public class DubbingActivity extends AppCompatActivity implements
         mAudioRecordHelper = new AudioRecordHelper(mFile);
         mAudioRecordHelper.setOnAudioRecordListener(this);
 
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                // TODO: show explanation
-            } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                                android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                                Manifest.permission.RECORD_AUDIO}, 1);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                mPermissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
             }
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            mPermissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            mPermissions.add(Manifest.permission.RECORD_AUDIO);
+        }
+
+        if (mPermissions.size() > 0) {
+            String[] permissions = new String[mPermissions.size()];
+            ActivityCompat.requestPermissions(this, mPermissions.toArray(permissions), PERMISSION_REQUEST_CODE);
         } else {
             initView();
             checkRoles(null);
@@ -182,16 +194,16 @@ public class DubbingActivity extends AppCompatActivity implements
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case 1: {
-                if (grantResults.length > 0 &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED &&
-                        grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the task you need to do.
-                    initView();
-                    checkRoles(null);
-                } else {
-                    // permission denied, boo! Disable the functionality that depends on this permission.
+            case PERMISSION_REQUEST_CODE: {
+                for (int result : grantResults) {
+                    if (result != PackageManager.PERMISSION_GRANTED) {
+                        Toast.makeText(this, "您拒绝了相应的权限，无法完成配音", Toast.LENGTH_LONG).show();
+                        finish();
+                        return;
+                    }
                 }
+                initView();
+                checkRoles(null);
             }
         }
     }

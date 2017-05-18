@@ -155,6 +155,20 @@ public class DubbingVideoView extends FrameLayout implements
 
     }
 
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        // measure mode
+        final int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+        // Get measured sizes
+        final int width = MeasureSpec.getSize(widthMeasureSpec);
+        final int height = (int) (width * 9 / 16f);
+
+        heightMeasureSpec = MeasureSpec.makeMeasureSpec(height, heightMode);
+//        setMeasuredDimension(width, height);
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+    }
+
     private void setListener() {
         mIjkVideoView.setOnClickListener(this);
         mPlayButton.setOnClickListener(this);

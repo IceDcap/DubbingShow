@@ -402,6 +402,7 @@ public class DubbingSubtitleView extends TextView {
             SRTSubtitleEntity curSRT = srtSubtitleEntityList.get(mIndex);
             SRTSubtitleEntity lastSRT = srtSubtitleEntityList.get(mIndex - 1);
             content = curSRT.getRole().equals(lastSRT.getRole()) ? content : role + content;
+            mProcessTime = curSRT.getStarttime() - lastSRT.getEndtime();
         }
 
         speed1 = rate;
