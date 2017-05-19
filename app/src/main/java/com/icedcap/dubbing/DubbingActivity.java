@@ -2,6 +2,7 @@ package com.icedcap.dubbing;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -216,6 +217,34 @@ public class DubbingActivity extends AppCompatActivity implements
             mDubbingSubtitleView.init(mSrtEntityList);
         }
     }
+
+    @Override
+    public void onBackPressed() {
+        if (isRecording) {
+            isDubbing = false;
+            dubbing();
+            new AlertDialog.Builder(this)
+                    .setMessage("正在录音，真的退出吗？喵~")
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            isDubbing = true;
+                            dubbing();
+                        }
+                    })
+                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            DubbingActivity.this.finish();
+                        }
+                    })
+                    .show();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
 
     private void initView() {
         mDubbingSubtitleView = (DubbingSubtitleView) findViewById(R.id.subtitleView);
