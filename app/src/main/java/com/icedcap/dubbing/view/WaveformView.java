@@ -14,6 +14,7 @@ import android.os.Build;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -49,6 +50,8 @@ public class WaveformView extends View {
     private long mLastDrawTime;
     private float mLeft;
     private ValueAnimator mValueAnimator;
+
+    private WaveformPlayMask mWaveformPlayMask;
 
     private long mCurrentTime; // seconds
     private int mDuration = DEFAULT_DURATION; // the material time long.
@@ -146,7 +149,7 @@ public class WaveformView extends View {
     }
 
     private void init(Context context, AttributeSet attrs, int defStyleAttr) {
-
+        mWaveformPlayMask = new WaveformPlayMask(false);
         // Always draw
         setWillNotDraw(false);
         setLayerType(LAYER_TYPE_SOFTWARE, null);
@@ -275,6 +278,19 @@ public class WaveformView extends View {
                 canvas.drawLine(mLeft + j, halfHeight - calculateWaveHeight(mWaveHeights[j]),
                         mLeft + j, halfHeight + calculateWaveHeight(mWaveHeights[j]), mWavePaint);
             }
+        }
+
+
+        // draw mask
+        if (mWaveformPlayMask != null && mWaveformPlayMask.mEnable) {
+            int indicatorPos = calculateIndicatorLeft(mWaveHeights) + DimenUtil.dip2px(getContext(), 1.5f);
+            int l = indicatorPos - calculateDistanceByTime(mWaveformPlayMask.mStartTime, mCurrentTime);
+            if (mWaveHeights != null && mWaveHeights.length * getPeriodPerFrame() < mCurrentTime) {
+                l = indicatorPos - calculateDistanceByTime(mWaveformPlayMask.mStartTime,
+                        mWaveHeights.length * getPeriodPerFrame());
+            }
+
+            canvas.drawRect(l, 0, indicatorPos, mRectangleHeight, mWaveformPlayMask.mPaint);
         }
 
         // draw indicator
@@ -477,6 +493,12 @@ public class WaveformView extends View {
         return res;
     }
 
+    private int calculateDistanceByTime(long startTime, long endTime) {
+        long offsetTime = endTime - startTime;
+        if (offsetTime < 0) return 0;
+        return (int) (offsetTime * getRefreshSpeed());
+    }
+
     public float getWidthPerSecond() {
         return mInterValOfSeconds;
     }
@@ -556,6 +578,14 @@ public class WaveformView extends View {
         return String.format(Locale.US, "%02d:%02d", j, i);
     }
 
+    public void setWaveformPlayMask(boolean showMask) {
+        mWaveformPlayMask.mEnable = showMask;
+    }
+
+    public void setMaskStartPos(int start) {
+        mWaveformPlayMask.mStartTime = start;
+    }
+
     public interface WaveformListener {
 
         void onWaveformScrolled(long seek);
@@ -566,4 +596,20 @@ public class WaveformView extends View {
     }
 
 
+    final static class WaveformPlayMask {
+        WaveformPlayMask(boolean enable) {
+            mEnable = enable;
+        }
+        int mStartTime;
+        boolean mEnable;
+        Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG) {
+            {
+                setDither(true);
+                setColor(0x4c555555);
+                setStyle(Style.FILL);
+            }
+        };
+
+
+    }
 }

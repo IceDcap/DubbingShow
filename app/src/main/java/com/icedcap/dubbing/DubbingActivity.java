@@ -666,6 +666,9 @@ public class DubbingActivity extends AppCompatActivity implements
     @Override
     public void onWaveformOffset(long time) {
         mPlayTime = time;
+        if (mPlayTime > mDuration / 4) {
+            mCompleteBtn.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -815,6 +818,7 @@ public class DubbingActivity extends AppCompatActivity implements
         mTryListenBtn.setImageLevel(i);
         //show or hide withdraw
         controlComponentVisible(mWithdrawContainer, i != 1);
+        mWaveformView.setWaveformPlayMask(level == 0);
         switch (level) {
             case 0:
                 startReview();
@@ -842,7 +846,7 @@ public class DubbingActivity extends AppCompatActivity implements
         // play video view
         mDubbingVideoView.startReview(mPlayTime);
         mAction.setEnabled(false);
-
+        mWaveformView.setMaskStartPos((int) mPlayTime);
     }
 
     private void stopReview() {
