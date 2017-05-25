@@ -127,4 +127,26 @@ public class MediaUtil {
             }
         }
     }
+
+
+    /**
+     * Make a cover img to local
+     *
+     * @param bitmap   bitmap instance
+     * @param filename filename which to write
+     */
+    public static void writeCoverImgToLocal(Bitmap bitmap, String filename) {
+        int w = bitmap.getWidth();
+        int h = bitmap.getHeight();
+        final float r = w / h;
+        if (r > 16 / 9f) {
+            w = (int) (h * 16 / 9f);
+        } else {
+            h = (int) (w * 9 / 16f);
+        }
+
+        Bitmap b = Bitmap.createBitmap(bitmap, 0, 0, w, h);
+        writeBitmapToLocal(b, filename);
+    }
+
 }
