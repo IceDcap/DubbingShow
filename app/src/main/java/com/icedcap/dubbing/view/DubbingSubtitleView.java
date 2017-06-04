@@ -9,12 +9,11 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Build;
+import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.icedcap.dubbing.R;
 import com.icedcap.dubbing.entity.SRTEntity;
@@ -31,7 +30,7 @@ import java.util.List;
  * Created by dsq on 2017/4/24.
  */
 
-public class DubbingSubtitleView extends TextView {
+public class DubbingSubtitleView extends AppCompatTextView {
     private static String TAG = DubbingSubtitleView.class.getSimpleName();
 
     public static final int LONG_BREAK_TIME = 1500;

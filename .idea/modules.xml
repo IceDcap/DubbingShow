@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Dubbing.iml" filepath="$PROJECT_DIR$/Dubbing.iml" />
       <module fileurl="file://$PROJECT_DIR$/DubbingShow.iml" filepath="$PROJECT_DIR$/DubbingShow.iml" />
       <module fileurl="file://$PROJECT_DIR$/androidlame/androidlame.iml" filepath="$PROJECT_DIR$/androidlame/androidlame.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
