@@ -85,4 +85,5 @@
     <string name="upload_dubbing_share_to_qq_friends">QQ好友</string>
     <string name="upload_dubbing_share_to_sina_weibo">新浪微博</string>
     <string name="upload_dubbing_share_to_qzone">QQ空间</string>
+    <string name="choose_cover_from_video_hint">滑动可选择一张封面</string>
 </resources>

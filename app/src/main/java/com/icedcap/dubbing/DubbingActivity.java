@@ -308,7 +308,31 @@ public class DubbingActivity extends AppCompatActivity implements
         mCompleteBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                processCompleteArtInNewActivity();
+                if (mWaveformView.getCurrentTotalTime() < mDuration) {
+                    if (isRecording) {
+                        isDubbing = !isDubbing;
+                        dubbing();
+                    }
+                    final android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(DubbingActivity.this)
+                            .setMessage("当前视频还没有结束，确认要完成录制吗？")
+                            .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    processCompleteArtInNewActivity();
+                                    dialog.dismiss();
+                                }
+                            })
+                            .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            })
+                            .create();
+                    dialog.show();
+                }else {
+                    processCompleteArtInNewActivity();
+                }
             }
         });
     }

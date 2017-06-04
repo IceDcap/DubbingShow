@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -115,7 +116,7 @@ public class DubbingUploadActivity extends FragmentActivity {
     }
 
     public void selectCoverFromVideo() {
-
+        ChooseCoverFromVideoActivity.launch(this, REQUEST_CODE_FROM_VIDEO, mVideoPath);
     }
 
     @Override
@@ -142,7 +143,10 @@ public class DubbingUploadActivity extends FragmentActivity {
                 }
                 break;
             case REQUEST_CODE_FROM_VIDEO:
-
+                String str = data.getStringExtra("cover-from-video");
+                if (!TextUtils.isEmpty(str)) {
+                    updateImageView(BitmapFactory.decodeFile(str));
+                }
                 break;
             case CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE:
                 CropImage.ActivityResult result = CropImage.getActivityResult(data);
