@@ -50,7 +50,7 @@ public class DubbingActivity extends AppCompatActivity implements
         WaveformView.WaveformListener,
         AudioRecordHelper.OnAudioRecordListener {
     private static final int PERMISSION_REQUEST_CODE = 0x520;
-    private static final int MATERIAL = 0;
+    private static final int MATERIAL = 1;
     private static final int[] SUBTITLE = new int[]{
             R.raw.subtitle,
             R.raw.subtitle1,
@@ -114,6 +114,7 @@ public class DubbingActivity extends AppCompatActivity implements
     private WaveformView mWaveformView;
     private FrameLayout mWithdrawContainer;
     private TextView mWithdrawCount;
+    private View mArtProcessView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,6 +159,9 @@ public class DubbingActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
+        if (mArtProcessView != null) {
+            mArtProcessView.setVisibility(View.GONE);
+        }
         if (mDubbingVideoView != null) {
             mDubbingVideoView.onResume();
         }
@@ -190,6 +194,12 @@ public class DubbingActivity extends AppCompatActivity implements
             isDubbing = false;
             dubbing();
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mArtProcessView.setVisibility(View.GONE);
     }
 
     @Override
@@ -248,6 +258,9 @@ public class DubbingActivity extends AppCompatActivity implements
 
     private void initView() {
         mDubbingSubtitleView = (DubbingSubtitleView) findViewById(R.id.subtitleView);
+        mArtProcessView = findViewById(R.id.art_process_view);
+        final ProgressBar pb = (ProgressBar) findViewById(R.id.art_progress_bar);
+        pb.getIndeterminateDrawable().setColorFilter(0xFFCECECE, android.graphics.PorterDuff.Mode.MULTIPLY);
         mVideoTime = (TextView) findViewById(R.id.video_time);
         mWaitingNum = (TextView) findViewById(R.id.waitingNum);
         mCompleteBtn = (TextView) findViewById(R.id.complete);
@@ -354,11 +367,7 @@ public class DubbingActivity extends AppCompatActivity implements
     }
 
     private void processCompleteArtInNewActivity() {
-        final AlertDialog dialog = new AlertDialog.Builder(DubbingActivity.this)
-                .setMessage("正在处理中....")
-                .create();
-
-        dialog.cancel();
+        mArtProcessView.setVisibility(View.VISIBLE);
 
         new AsyncTask<Void, Void, Void>() {
             String record;
@@ -367,7 +376,7 @@ public class DubbingActivity extends AppCompatActivity implements
 
             @Override
             protected void onPreExecute() {
-                dialog.show();
+
             }
 
             @Override
@@ -392,7 +401,6 @@ public class DubbingActivity extends AppCompatActivity implements
 
             @Override
             protected void onPostExecute(Void aVoid) {
-                dialog.cancel();
                 DubbingPreviewActivity.launch(DubbingActivity.this,
                         record,
                         video,
@@ -590,6 +598,7 @@ public class DubbingActivity extends AppCompatActivity implements
                         mWaveformView.refreshToStartPos();
                     }
                     isRecording = true;
+                    mDubbingSubtitleView.setEditted(!isRecording);
                 } else {
                     mWaitingNum.setVisibility(View.VISIBLE);
                     mDubbingVideoView.setDisabled(true);
@@ -815,6 +824,7 @@ public class DubbingActivity extends AppCompatActivity implements
             mDubbingVideoView.stopDubbing();
             mAction.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.dubbing_btn_record));
             isRecording = false;
+            mDubbingSubtitleView.setEditted(!isRecording);
             mRollbackPos = (int) mWaveformView.getCurrentTimeByIndicator();
         }
         showTryListenBtn();

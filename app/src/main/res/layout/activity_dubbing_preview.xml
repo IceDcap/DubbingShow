@@ -77,16 +77,6 @@
                 android:id="@+id/videoView"
                 android:layout_width="match_parent"
                 android:layout_height="200.0dp"/>
-            <!--<tv.danmaku.ijk.media.IjkVideoView-->
-            <!--android:id="@+id/videoView"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="200dp"/>-->
-            <!--<ImageView-->
-            <!--android:id="@+id/play"-->
-            <!--android:layout_gravity="center"-->
-            <!--android:src="@drawable/ds_all_button_play"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"/>-->
 
             <ProgressBar
                 android:id="@+id/progress"
@@ -257,69 +247,74 @@
                     android:button="@null"/>
 
                 <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+
+                <RadioButton
+                android:id="@+id/personal_control_voice_menu"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:background="@drawable/icon_control_voice"
+                android:button="@null"/>
+
+                <Space
                     android:layout_width="0dp"
                     android:layout_height="0dp"
                     android:layout_weight="1"/>
 
-                <!--<Space-->
-                <!--android:layout_width="0dp"-->
-                <!--android:layout_height="0dp"-->
-                <!--android:layout_weight="1"/>-->
-
-                <!--<RadioButton-->
-                <!--android:id="@+id/personal_control_voice_menu"-->
-                <!--android:layout_width="30dp"-->
-                <!--android:layout_height="30dp"-->
-                <!--android:layout_gravity="center"-->
-                <!--android:background="@drawable/icon_control_voice"-->
-                <!--android:button="@null"/>-->
             </RadioGroup>
 
-            <!--<RadioGroup-->
-            <!--android:id="@+id/background_menu"-->
-            <!--android:layout_width="0dp"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_weight="1"-->
-            <!--android:gravity="center"-->
-            <!--android:orientation="horizontal"-->
-            <!--android:paddingLeft="20dp"-->
-            <!--android:paddingRight="20dp">-->
+            <RadioGroup
+            android:id="@+id/background_menu"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp">
 
-            <!--<RadioButton-->
-            <!--android:id="@+id/background_volume_menu"-->
-            <!--android:layout_width="30dp"-->
-            <!--android:layout_height="30dp"-->
-            <!--android:layout_gravity="center"-->
-            <!--android:background="@drawable/icon_modify_volume"-->
-            <!--android:button="@null"-->
-            <!--android:checked="true"/>-->
+            <RadioButton
+            android:id="@+id/background_volume_menu"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:background="@drawable/icon_modify_volume"
+            android:button="@null"
+            android:checked="true"/>
 
-            <!--<RadioButton-->
-            <!--android:id="@+id/background_control_voice_menu"-->
-            <!--android:layout_width="30dp"-->
-            <!--android:layout_height="30dp"-->
-            <!--android:layout_gravity="center"-->
-            <!--android:layout_marginLeft="43dp"-->
-            <!--android:background="@drawable/icon_control_voice"-->
-            <!--android:button="@null"/>-->
+            <RadioButton
+            android:id="@+id/background_control_voice_menu"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:layout_marginLeft="43dp"
+            android:background="@drawable/icon_control_voice"
+            android:button="@null"/>
 
-            <!--</RadioGroup>-->
-            <FrameLayout
-                android:id="@+id/background_menu"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:paddingLeft="20dp"
-                android:paddingRight="20dp">
-                <ImageView
-                    android:layout_gravity="center"
-                    android:id="@+id/background_volume_menu_control"
-                    android:src="@drawable/icon_background_volume"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
-            </FrameLayout>
+            </RadioGroup>
+            <!--<FrameLayout-->
+                <!--android:id="@+id/background_menu"-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:layout_weight="1"-->
+                <!--android:gravity="center"-->
+                <!--android:orientation="horizontal"-->
+                <!--android:paddingLeft="20dp"-->
+                <!--android:paddingRight="20dp">-->
+                <!--<ImageView-->
+                    <!--android:layout_gravity="center"-->
+                    <!--android:id="@+id/background_volume_menu_control"-->
+                    <!--android:src="@drawable/icon_background_volume"-->
+                    <!--android:layout_width="wrap_content"-->
+                    <!--android:layout_height="wrap_content"/>-->
+            <!--</FrameLayout>-->
         </LinearLayout>
     </LinearLayout>
+    <include
+        android:id="@+id/art_process_view"
+        layout="@layout/process_view"
+        android:visibility="gone"/>
 </FrameLayout>

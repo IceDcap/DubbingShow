@@ -47,7 +47,9 @@ public class DubbingUploadingFragment extends Fragment implements View.OnClickLi
         v.postDelayed(new Runnable() {
             @Override
             public void run() {
-                ((DubbingUploadActivity)getActivity()).launchUploadSuccessPage();
+                if (getActivity() != null) {
+                    ((DubbingUploadActivity) getActivity()).launchUploadSuccessPage();
+                }
             }
         }, 5000);
     }

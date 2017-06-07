@@ -20,16 +20,23 @@ import net.surina.soundtouch.SoundTouch;
 import com.icedcap.dubbing.entity.SRTEntity;
 import com.icedcap.dubbing.listener.DubbingVideoViewEventAdapter;
 import com.icedcap.dubbing.utils.MediaUtil;
-import com.icedcap.dubbing.view.CircleModifierView;
+import com.icedcap.dubbing.view.CircleModifierLayout;
 import com.icedcap.dubbing.view.DubbingVideoView;
 import com.icedcap.dubbing.view.PreviewSubtitleView;
 import com.icedcap.dubbing.view.UprightModifierView;
+import com.naman14.androidlame.AndroidLame;
+import com.naman14.androidlame.LameBuilder;
+import com.naman14.androidlame.WaveReader;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.icedcap.dubbing.view.CircleModifierView.DEFAULT_MAX_PROGRESS;
+import static com.icedcap.dubbing.view.CircleModifierLayout.DEFAULT_MAX_PROGRESS;
 import static com.icedcap.dubbing.view.DubbingVideoView.MODE_FINALLY_REVIEW;
 
 /**
@@ -44,12 +51,15 @@ import static com.icedcap.dubbing.view.DubbingVideoView.MODE_FINALLY_REVIEW;
  * 5. personal & background audio echo process
  */
 public class DubbingPreviewActivity extends Activity implements View.OnClickListener, AudioPlayHelper.OnAudioRecordPlaybackListener {
+    private static final boolean IS_DEBUG = true;
     private static final String LOG_TAG = "DubbingPreviewActivity";
     private static final String EXTRA_RECORD_FILE_PATH_KEY = "extra-record-file-path-key";
     private static final String EXTRA_PITCH_FILE_PATH_KEY = "extra-pitch-file-path-key";
     private static final String EXTRA_VIDEO_FILE_PATH_KEY = "extra-video-file-path-key";
     private static final String EXTRA_BACKGROUND_FILE_PATH_KEY = "extra-background-file-path-key";
     private static final String EXTRA_SRT_SUBTITLE_KEY = "extra-srt-subtitle-key";
+
+    private static final int OUTPUT_STREAM_BUFFER = 8192;
 
     private String mRecordFilePath;
     private String mVideoFilePath;
@@ -66,17 +76,18 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     // ui components
     private UprightModifierView mPersonalUprightView;
     private UprightModifierView mBackgroundUprightView;
-    private CircleModifierView mPersonalCircleView;
-    private CircleModifierView mPersonalPitchCircleView;
-    private CircleModifierView mBackgroundCircleView;
+    private CircleModifierLayout mPersonalCircleView;
+    private CircleModifierLayout mPersonalPitchCircleView;
+    private CircleModifierLayout mBackgroundCircleView;
     private RadioGroup mPersonalRG;
-//    private RadioGroup mBackgroundRG;
-    private ImageView mBackgroundRG;
+    private RadioGroup mBackgroundRG;
+//    private ImageView mBackgroundRG;
     private DubbingVideoView mDubbingVideoView;
     private TextView mTime;
     private TextView mRbTime;
     private ProgressBar mProgressBar;
     private PreviewSubtitleView mSubtitleView;
+    private View mArtProcess;
 
     private static long start;
 
@@ -107,17 +118,20 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     }
 
     private void init() {
+        mArtProcess = findViewById(R.id.art_process_view);
+        final ProgressBar pb = (ProgressBar) findViewById(R.id.art_progress_bar);
+        pb.getIndeterminateDrawable().setColorFilter(0xFFCECECE, android.graphics.PorterDuff.Mode.MULTIPLY);
         findViewById(R.id.back).setOnClickListener(this);
         findViewById(R.id.complete).setOnClickListener(this);
         mPersonalUprightView = (UprightModifierView) findViewById(R.id.personal_control_voice_modifier);
         mBackgroundUprightView = (UprightModifierView) findViewById(R.id.background_control_voice_modifier);
 
-        mPersonalCircleView = (CircleModifierView) findViewById(R.id.personal_volume_modifier);
-        mPersonalPitchCircleView = (CircleModifierView) findViewById(R.id.personal_pitch_voice_modifier);
+        mPersonalCircleView = (CircleModifierLayout) findViewById(R.id.personal_volume_modifier);
+        mPersonalPitchCircleView = (CircleModifierLayout) findViewById(R.id.personal_pitch_voice_modifier);
 //        mPersonalPitchCircleView.setIsAnimated(false);
-        mBackgroundCircleView = (CircleModifierView) findViewById(R.id.background_volume_modifier);
+        mBackgroundCircleView = (CircleModifierLayout) findViewById(R.id.background_volume_modifier);
         mPersonalRG = (RadioGroup) findViewById(R.id.personal_menu);
-//        mBackgroundRG = (RadioGroup) findViewById(R.id.background_menu);
+        mBackgroundRG = (RadioGroup) findViewById(R.id.background_menu);
 
         mPersonalRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -134,16 +148,16 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
                         mPersonalCircleView.setVisibility(View.GONE);
                         mPersonalPitchCircleView.setVisibility(View.VISIBLE);
                         break;
-//                    case R.id.personal_control_voice_menu:
-//                        mPersonalCircleView.setVisibility(View.GONE);
-//                        mPersonalPitchCircleView.setVisibility(View.GONE);
-//                        mPersonalUprightView.setVisibility(View.VISIBLE);
-//                        break;
+                    case R.id.personal_control_voice_menu:
+                        mPersonalCircleView.setVisibility(View.GONE);
+                        mPersonalPitchCircleView.setVisibility(View.GONE);
+                        mPersonalUprightView.setVisibility(View.VISIBLE);
+                        break;
                 }
             }
         });
 
-       /* mBackgroundRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+        mBackgroundRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 switch (checkedId) {
@@ -157,8 +171,8 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
                         break;
                 }
             }
-        });*/
-        mBackgroundRG = (ImageView) findViewById(R.id.background_volume_menu_control);
+        });
+/*        mBackgroundRG = (ImageView) findViewById(R.id.background_volume_menu_control);
         mBackgroundRG.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -174,7 +188,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
                 mAudioHelper.setBackgroundVolume(mBackgroundVolume);
             }
         });
-
+*/
 
         mDubbingVideoView = (DubbingVideoView) findViewById(R.id.videoView);
         mTime = (TextView) findViewById(R.id.video_time);
@@ -198,6 +212,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
     @Override
     protected void onResume() {
         super.onResume();
+        mArtProcess.setVisibility(View.GONE);
 //        initVideoView();
         /*getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
@@ -213,6 +228,12 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
         super.onPause();
         mDubbingVideoView.onPause();
         mAudioHelper.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mArtProcess.setVisibility(View.GONE);
     }
 
     private void initVideoView() {
@@ -293,9 +314,18 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
                 onBackPressed();
                 break;
             case R.id.complete:
-                DubbingUploadActivity.launch(this,
-                        isPitched ? getPitchOutPath() : mRecordFilePath,
-                        mVideoFilePath);
+                mArtProcess.setVisibility(View.VISIBLE);
+//                DubbingUploadActivity.launch(this,
+//                        isPitched ? getPitchOutPath() : mRecordFilePath,
+//                        mVideoFilePath);
+                mDubbingVideoView.onPause();
+                mAudioHelper.onPause();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        convertWavToMp3();
+                    }
+                }).start();
                 break;
         }
     }
@@ -320,7 +350,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
      * modifier ue control
      */
     private void setModifierProgressListener() {
-        mPersonalCircleView.setOnModifierListener(new CircleModifierView.OnModifierListener() {
+        mPersonalCircleView.setOnModifierListener(new CircleModifierLayout.OnModifierListener() {
             @Override
             public void onModified(float progress) {
                 // fix record audio volume
@@ -335,7 +365,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
             }
         });
 
-        mPersonalPitchCircleView.setOnModifierListener(new CircleModifierView.OnModifierListener() {
+        mPersonalPitchCircleView.setOnModifierListener(new CircleModifierLayout.OnModifierListener() {
             @Override
             public void onModified(float progress) {
                 if (progress < 0 || progress > DEFAULT_MAX_PROGRESS || mPitchParam == progress) return;
@@ -352,7 +382,7 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
             }
         });
 
-        mBackgroundCircleView.setOnModifierListener(new CircleModifierView.OnModifierListener() {
+        mBackgroundCircleView.setOnModifierListener(new CircleModifierLayout.OnModifierListener() {
             @Override
             public void onModified(float progress) {
                 // fix background audio volume
@@ -536,4 +566,134 @@ public class DubbingPreviewActivity extends Activity implements View.OnClickList
 
     }
 
+    private void convertWavToMp3() {
+        mRecordFilePath = isPitched ? getPitchOutPath() : mRecordFilePath;
+        BufferedOutputStream outputStream = null;
+        File input = new File(mRecordFilePath);
+        final File output = new File(getExternalCacheDir(), "tmp.mp3");
+
+        int CHUNK_SIZE = 8192;
+
+        addLog("Initialising wav reader");
+        final WaveReader waveReader = new WaveReader(input);
+
+        try {
+            waveReader.openWave();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        addLog("Intitialising encoder");
+        AndroidLame androidLame = new LameBuilder()
+                .setInSampleRate(waveReader.getSampleRate())
+                .setOutChannels(waveReader.getChannels())
+                .setOutBitrate(128)
+                .setOutSampleRate(waveReader.getSampleRate())
+                .setQuality(5)
+                .build();
+
+        try {
+            outputStream = new BufferedOutputStream(new FileOutputStream(output), OUTPUT_STREAM_BUFFER);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        int bytesRead = 0;
+
+        short[] buffer_l = new short[CHUNK_SIZE];
+        short[] buffer_r = new short[CHUNK_SIZE];
+        byte[] mp3Buf = new byte[CHUNK_SIZE];
+
+        int channels = waveReader.getChannels();
+
+        addLog("started encoding");
+        while (true) {
+            try {
+                if (channels == 2) {
+
+                    bytesRead = waveReader.read(buffer_l, buffer_r, CHUNK_SIZE);
+                    addLog("bytes read=" + bytesRead);
+
+                    if (bytesRead > 0) {
+
+                        int bytesEncoded = 0;
+                        bytesEncoded = androidLame.encode(buffer_l, buffer_r, bytesRead, mp3Buf);
+                        addLog("bytes encoded=" + bytesEncoded);
+
+                        if (bytesEncoded > 0) {
+                            try {
+                                addLog("writing mp3 buffer to outputstream with " + bytesEncoded + " bytes");
+                                outputStream.write(mp3Buf, 0, bytesEncoded);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                    } else break;
+                } else {
+
+                    bytesRead = waveReader.read(buffer_l, CHUNK_SIZE);
+                    addLog("bytes read=" + bytesRead);
+
+                    if (bytesRead > 0) {
+                        int bytesEncoded = 0;
+
+                        bytesEncoded = androidLame.encode(buffer_l, buffer_l, bytesRead, mp3Buf);
+                        addLog("bytes encoded=" + bytesEncoded);
+
+                        if (bytesEncoded > 0) {
+                            try {
+                                addLog("writing mp3 buffer to outputstream with " + bytesEncoded + " bytes");
+                                outputStream.write(mp3Buf, 0, bytesEncoded);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                    } else break;
+                }
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        addLog("flushing final mp3buffer");
+        int outputMp3buf = androidLame.flush(mp3Buf);
+        addLog("flushed " + outputMp3buf + " bytes");
+
+        if (outputMp3buf > 0) {
+            try {
+                addLog("writing final mp3buffer to outputstream");
+                outputStream.write(mp3Buf, 0, outputMp3buf);
+                addLog("closing output stream");
+                outputStream.close();
+                mRecordFilePath = output.getAbsolutePath();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                DubbingUploadActivity.launch(DubbingPreviewActivity.this,
+//                        mEventId,
+//                        mMaterialId,
+//                        mMaterialTitle,
+                        mRecordFilePath,
+                        mVideoFilePath/*,
+                        mSRTEntities*/);
+//                mArtProcess.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    private void addLog(String msg) {
+        if (IS_DEBUG) {
+            Log.d(LOG_TAG, msg);
+        }
+    }
 }
