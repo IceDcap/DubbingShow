@@ -1,14 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.icedcap.dubbing.view.CircleModifierView
+<com.icedcap.dubbing.view.CircleModifierLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
-    android:background="@drawable/bg_audio_modifier"
-    app:apsv_animated="true"
-    app:apsv_dragged="true"
-    app:apsv_draw_width="14dp"
-    app:apsv_model_bg_enabled="true"
-    app:apsv_rounded="true"
-    app:apsv_shadowed="false"/>
+    android:layout_gravity="center"/>

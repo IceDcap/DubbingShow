@@ -33,8 +33,8 @@
 
         <attr name="apsv_preview_colors" format="reference"/>
         <attr name="apsv_preview_bg" format="color"/>
-        <attr name="modifier_max_text" format="string"/>
-        <attr name="modifier_min_text" format="string"/>
+        <attr name="apsv_max_text" format="string"/>
+        <attr name="apsv_min_text" format="string"/>
     </declare-styleable>
 
     <declare-styleable name="RoundCornerProgress">
@@ -70,5 +70,12 @@
         <attr name="wave_color" format="color"/>
         <attr name="time_text_color" format="color"/>
         <attr name="time_text_size" format="dimension"/>
+    </declare-styleable>
+
+    <declare-styleable name="CircleProgressBar">
+        <attr name="modifier_interpolator" format="reference"/>
+        <attr name="modifier_max_text" format="string"/>
+        <attr name="modifier_min_text" format="string"/>
+        <attr name="modifier_default_progress" format="float"/>
     </declare-styleable>
 </resources>

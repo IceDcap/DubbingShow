@@ -1,11 +1,11 @@
 package com.icedcap.dubbing.view;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.SweepGradient;
 import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -17,18 +17,14 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.icedcap.dubbing.R;
-import com.icedcap.dubbing.utils.DimenUtil;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Created by dsq on 2017/5/5.
+ * Created by dsq on 2017/6/6.
  * <p>
  * The custom editor view that modify volume for finished dubbing art.
  */
-public class CircleModifierView extends FrameLayout implements ArcProgressStackView.OnDragProgressListener {
-    private List<ArcProgressStackView.Model> mModels = new ArrayList<>();
+public class CircleModifierLayout extends FrameLayout implements CircleProgressBar.OnDragProgressListener{
     private static final int BACKGROUND_COLOR = 0xff282020;
     private static final int START_COLOR = 0xffb23939;
     private static final int END_COLOR = 0xffad4545;
@@ -43,30 +39,40 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
     private static final String DEFAULT_MIN_TEXT = "MIN";
 
     private int mModifierProgress = DEFAULT_PROGRESS_TEXT;
-    private String mMaxText = DEFAULT_MAX_TEXT;
-    private String mMinText = DEFAULT_MIN_TEXT;
-    private int[] mProgressColor = new int[2];
 
-    private ArcProgressStackView mStackView;
+    private CircleProgressBar mStackView;
     private TextView mModifierTitleTv;
     private TextView mModifierProgressTv;
     private TextView mMaxTv;
     private TextView mMinTv;
     private View mContentView;
 
+    private String mMaxText = DEFAULT_MAX_TEXT;
+    private String mMinText = DEFAULT_MIN_TEXT;
+    private int[] mProgressColor = new int[2];
+
     private int mSize;
     private OnModifierListener mOnModifierListener;
-
-    public CircleModifierView(Context context) {
+    public CircleModifierLayout(Context context) {
         this(context, null);
     }
 
-    public CircleModifierView(Context context, AttributeSet attrs) {
+    public CircleModifierLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public CircleModifierView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public CircleModifierLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        if (isInEditMode()) {
+            previewLayout(context);
+        } else {
+            init(context, attrs, defStyleAttr);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public CircleModifierLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
         if (isInEditMode()) {
             previewLayout(context);
         } else {
@@ -88,73 +94,76 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
     }
 
     private void init(Context context, AttributeSet attributeSet, int defStyleAttr) {
-        TypedArray typedArray = context.obtainStyledAttributes(attributeSet, R.styleable.ArcProgressStackView, defStyleAttr, 0);
-        mMaxText = typedArray.getString(R.styleable.ArcProgressStackView_modifier_max_text);
+        TypedArray typedArray = context.obtainStyledAttributes(attributeSet, R.styleable.CircleProgressBar, defStyleAttr, 0);
+        mMaxText = typedArray.getString(R.styleable.CircleProgressBar_modifier_max_text);
         if (TextUtils.isEmpty(mMaxText)) {
             mMaxText = DEFAULT_MAX_TEXT;
         }
-        mMinText = typedArray.getString(R.styleable.ArcProgressStackView_modifier_min_text);
+        mMinText = typedArray.getString(R.styleable.CircleProgressBar_modifier_min_text);
         if (TextUtils.isEmpty(mMinText)) {
             mMinText = DEFAULT_MIN_TEXT;
         }
         typedArray.recycle();
-        final ArcProgressStackView.Model model = new ArcProgressStackView.Model("", DEFAULT_PROGRESS,
-                BACKGROUND_COLOR, new int[]{END_COLOR, START_COLOR});
-        mModels.add(model);
-        mStackView = new ArcProgressStackView(context, attributeSet, defStyleAttr);
-        mStackView.setModels(mModels);
+        mStackView = new CircleProgressBar(context, attributeSet, defStyleAttr);
 
         mMaxTv = new TextView(context);
+        mMaxTv.setPadding(0, 10, 10, 0);
         mMaxTv.setText(mMaxText);
         mMaxTv.setTextColor(DEFAULT_TEXT_COLOR);
         mMaxTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE);
+        mMaxTv.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mStackView.setSmoothProgress(DEFAULT_MAX_PROGRESS);
+            }
+        });
 
         mMinTv = new TextView(context);
         mMinTv.setText(mMinText);
+        mMinTv.setPadding(10, 10, 0, 0);
         mMinTv.setTextColor(DEFAULT_TEXT_COLOR);
         mMinTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE);
+        mMinTv.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mStackView.setSmoothProgress(0);
+            }
+        });
 
-        final FrameLayout.LayoutParams maxlp = new LayoutParams(
+
+        final LayoutParams stackviewlp = new LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                Gravity.END | Gravity.RIGHT | Gravity.BOTTOM);
+        stackviewlp.gravity = Gravity.CENTER;
+        addView(mStackView, stackviewlp);
+
+        final LayoutParams maxlp = new LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 Gravity.START | Gravity.LEFT | Gravity.BOTTOM);
         addView(mMaxTv, maxlp);
 
-        final FrameLayout.LayoutParams minlp = new LayoutParams(
+        final LayoutParams minlp = new LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 Gravity.END | Gravity.RIGHT | Gravity.BOTTOM);
         addView(mMinTv, minlp);
 
-        final FrameLayout.LayoutParams stackviewlp = new LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                Gravity.END | Gravity.RIGHT | Gravity.BOTTOM);
-        final int margin = DimenUtil.dip2px(getContext(), 8);
-        stackviewlp.setMargins(margin, margin, margin, margin);
-        stackviewlp.gravity = Gravity.CENTER;
-        addView(mStackView, stackviewlp);
-
         mContentView = LayoutInflater.from(context).
                 inflate(R.layout.volume_modifier_content, null, false);
         mModifierProgressTv = (TextView) mContentView.findViewById(R.id.modifier_progress_text);
         mModifierTitleTv = (TextView) mContentView.findViewById(R.id.modifier_title);
-        final FrameLayout.LayoutParams contentlp = new LayoutParams(
+        final LayoutParams contentlp = new LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 Gravity.CENTER);
         addView(mContentView, contentlp);
-        mContentView.setOnTouchListener(mStackView);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        // Get measured sizes
-        final int width = MeasureSpec.getSize(widthMeasureSpec);
-        final int height = MeasureSpec.getSize(heightMeasureSpec);
-        mSize = Math.min(width, height);
-        int spec = widthMeasureSpec < heightMeasureSpec ? widthMeasureSpec : heightMeasureSpec;
-        super.onMeasure(spec, spec);
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
     @Override
@@ -163,7 +172,6 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
         removeView(mContentView);
         addView(mContentView);
     }
-
 
     @Override
     public void setEnabled(boolean enabled) {
@@ -177,13 +185,12 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
         mMinTv.setTextColor(textColor);
         //change progress color to gray & can not to drag
         mStackView.setIsDragged(enable);
-        final ArcProgressStackView.Model model = mStackView.getModels().get(0);
         mProgressColor[0] = enable ? END_COLOR : UN_ENABLE_END_COLOR;
         mProgressColor[1] = enable ? START_COLOR : UN_ENABLE_START_COLOR;
-        model.setColors(mProgressColor);
-        model.setSweepGradient(new SweepGradient(
-                model.getBounds().centerX(),
-                model.getBounds().centerY(),
+        mStackView.setColors(mProgressColor);
+        mStackView.setSweepGradient(new SweepGradient(
+                mStackView.getModelBound().centerX(),
+                mStackView.getModelBound().centerY(),
                 mProgressColor, null));
         mStackView.postInvalidate();
     }
@@ -211,15 +218,6 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
         return mSize;
     }
 
-    public ArcProgressStackView getStackView() {
-        return mStackView;
-    }
-
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public void setIsAnimated(final boolean isAnimated) {
-        mStackView.setIsAnimated(isAnimated);
-    }
-
     @Override
     public void onProgress(float progress) {
         mModifierProgress = (int) progress;
@@ -236,22 +234,22 @@ public class CircleModifierView extends FrameLayout implements ArcProgressStackV
             mOnModifierListener.onModified(progress);
         }
     }
-
     @Override
     protected void onAttachedToWindow() {
-        mStackView.registerListener(this);
+        mStackView.setOnDragProgressListener(this);
         super.onAttachedToWindow();
     }
 
     @Override
     protected void onDetachedFromWindow() {
-        mStackView.unregisterListener(this);
+        mStackView.setOnDragProgressListener(null);
         super.onDetachedFromWindow();
     }
 
     public void setOnModifierListener(OnModifierListener onModifierListener) {
         mOnModifierListener = onModifierListener;
     }
+
 
     public interface OnModifierListener {
         void onModified(float progress);
